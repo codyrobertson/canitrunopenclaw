@@ -1,26 +1,33 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-ocean-900: #023E8A;
+  --color-ocean-800: #0077B6;
+  --color-ocean-700: #0096C7;
+  --color-ocean-600: #00B4D8;
+  --color-ocean-500: #48CAE4;
+  --color-ocean-400: #90E0EF;
+  --color-ocean-300: #ADE8F4;
+  --color-ocean-200: #CAF0F8;
+  --color-ocean-100: #E8F8FD;
+  --color-navy: #1B263B;
+  --color-navy-light: #2D3A4F;
+  --color-sand: #F8F9FA;
+  --color-sand-dark: #E9ECEF;
+  --color-verdict-great: #2D9F4F;
+  --color-verdict-ok: #0077B6;
+  --color-verdict-barely: #E07A2F;
+  --color-verdict-wont: #D32F2F;
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--color-sand);
+  color: var(--color-navy);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
 }
