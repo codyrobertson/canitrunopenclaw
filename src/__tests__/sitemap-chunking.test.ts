@@ -3,13 +3,13 @@ import { describe, expect, test } from "vitest";
 import { generateSitemaps } from "@/app/sitemap";
 
 describe("sitemap chunking", () => {
-  test("generateSitemaps returns typed sitemap ids", async () => {
+  test("generateSitemaps returns numeric sitemap ids", async () => {
     const ids = await generateSitemaps();
-    const idStrings = ids.map((x) => String((x as any).id));
+    const idNums = ids.map((x) => x.id);
 
-    expect(idStrings).toContain("static");
-    expect(idStrings).toContain("devices-0");
-    expect(idStrings).toContain("forks-0");
-    expect(idStrings).toContain("can-0");
+    expect(idNums).toContain(0);       // static
+    expect(idNums).toContain(1000);    // devices-0
+    expect(idNums).toContain(2000);    // forks-0
+    expect(idNums).toContain(3000);    // can-0
   });
 });

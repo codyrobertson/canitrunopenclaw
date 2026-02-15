@@ -13,24 +13,28 @@ function categoryToSlug(category: string): string {
 
 const CHUNK_SIZE = 45_000;
 
-type SitemapId =
-  | "static"
-  | `devices-${number}`
-  | `forks-${number}`
-  | `can-${number}`
-  | `best-${number}`
-  | `compare-${number}`
-  | `guides-${number}`;
+// Each sitemap type gets a range of numeric IDs:
+// 0 = static
+// 1000-1999 = devices chunks
+// 2000-2999 = forks chunks
+// 3000-3999 = can pages chunks
+// 4000-4999 = best pages chunks
+// 5000-5999 = compare chunks
+// 6000-6999 = guides chunks
 
 function chunkCount(total: number): number {
   return Math.max(1, Math.ceil(total / CHUNK_SIZE));
 }
 
-function parseSitemapId(id: string): { type: SitemapId extends `${infer T}-${number}` ? T : never; index: number } | null {
-  if (id === "static") return { type: "static" as any, index: 0 };
-  const match = id.match(/^(devices|forks|can|best|compare|guides)-(\\d+)$/);
-  if (!match) return null;
-  return { type: match[1] as any, index: Number(match[2]) };
+function decodeId(id: number): { type: string; index: number } {
+  if (id === 0) return { type: "static", index: 0 };
+  if (id >= 1000 && id < 2000) return { type: "devices", index: id - 1000 };
+  if (id >= 2000 && id < 3000) return { type: "forks", index: id - 2000 };
+  if (id >= 3000 && id < 4000) return { type: "can", index: id - 3000 };
+  if (id >= 4000 && id < 5000) return { type: "best", index: id - 4000 };
+  if (id >= 5000 && id < 6000) return { type: "compare", index: id - 5000 };
+  if (id >= 6000 && id < 7000) return { type: "guides", index: id - 6000 };
+  return { type: "unknown", index: 0 };
 }
 
 function sliceChunk<T>(items: T[], index: number): T[] {
@@ -38,7 +42,7 @@ function sliceChunk<T>(items: T[], index: number): T[] {
   return items.slice(start, start + CHUNK_SIZE);
 }
 
-export async function generateSitemaps(): Promise<{ id: SitemapId }[]> {
+export async function generateSitemaps(): Promise<{ id: number }[]> {
   const devices = getAllDevices();
   const forks = getAllForks();
   const canPages = getNonWontRunVerdicts();
@@ -46,21 +50,20 @@ export async function generateSitemaps(): Promise<{ id: SitemapId }[]> {
   const comparePages = getComparisonPairs();
   const guidesPages = getNonWontRunVerdicts();
 
-  const ids: { id: SitemapId }[] = [{ id: "static" }];
+  const ids: { id: number }[] = [{ id: 0 }]; // static
 
-  for (let i = 0; i < chunkCount(devices.length); i++) ids.push({ id: `devices-${i}` });
-  for (let i = 0; i < chunkCount(forks.length); i++) ids.push({ id: `forks-${i}` });
-  for (let i = 0; i < chunkCount(canPages.length); i++) ids.push({ id: `can-${i}` });
-  for (let i = 0; i < chunkCount(bestPages.length); i++) ids.push({ id: `best-${i}` });
-  for (let i = 0; i < chunkCount(comparePages.length); i++) ids.push({ id: `compare-${i}` });
-  for (let i = 0; i < chunkCount(guidesPages.length); i++) ids.push({ id: `guides-${i}` });
+  for (let i = 0; i < chunkCount(devices.length); i++) ids.push({ id: 1000 + i });
+  for (let i = 0; i < chunkCount(forks.length); i++) ids.push({ id: 2000 + i });
+  for (let i = 0; i < chunkCount(canPages.length); i++) ids.push({ id: 3000 + i });
+  for (let i = 0; i < chunkCount(bestPages.length); i++) ids.push({ id: 4000 + i });
+  for (let i = 0; i < chunkCount(comparePages.length); i++) ids.push({ id: 5000 + i });
+  for (let i = 0; i < chunkCount(guidesPages.length); i++) ids.push({ id: 6000 + i });
 
   return ids;
 }
 
-export default function sitemap({ id }: { id: SitemapId }): MetadataRoute.Sitemap {
-  const parsed = parseSitemapId(id);
-  if (!parsed) return [];
+export default function sitemap({ id }: { id: number }): MetadataRoute.Sitemap {
+  const parsed = decodeId(id);
 
   const baseUrl = "https://canitrunclaw.com";
 
