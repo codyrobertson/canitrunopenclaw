@@ -2,23 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Activity,
-  Box,
-  Brain,
-  CheckCircle2,
   Clock,
-  Code2,
   Cpu,
-  FileText,
-  Globe,
   HardDrive,
-  type LucideIcon,
   MemoryStick,
-  MessageSquare,
-  Monitor,
-  Puzzle,
-  Search,
   Trophy,
-  Wrench,
   Zap,
 } from "lucide-react";
 import {
@@ -343,187 +331,140 @@ export default async function BenchmarksPage({
           </div>
         </section>
 
-        {/* How ClawBench Works */}
-        <section className="mt-16" id="how-it-works">
-          <div className="text-center mb-10">
-            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-navy mb-2">
-              How ClawBench Works
-            </h2>
-            <p className="text-sm text-navy-light max-w-xl mx-auto">
-              A repeatable, containerized pipeline that benchmarks every fork under real hardware constraints.
-            </p>
-          </div>
-
-          {/* Pipeline steps — connected with line */}
-          <div className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
-            {/* Connector line (desktop only) */}
-            <div className="hidden lg:block absolute top-10 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-ocean-300 via-ocean-400 to-ocean-300" />
-
-            {([
-              {
-                step: "1",
-                icon: Box as LucideIcon,
-                title: "Containerize",
-                desc: "Clone the fork into a Docker container with CPU and RAM limits matching the target device.",
-                accent: "from-blue-500 to-cyan-500",
-                bg: "bg-blue-50",
-                ring: "ring-blue-200",
-                iconColor: "text-blue-600",
-              },
-              {
-                step: "2",
-                icon: Wrench as LucideIcon,
-                title: "Build & Install",
-                desc: "Install dependencies using the native toolchain \u2014 Go, Rust, Python, TypeScript, or C.",
-                accent: "from-violet-500 to-purple-500",
-                bg: "bg-violet-50",
-                ring: "ring-violet-200",
-                iconColor: "text-violet-600",
-              },
-              {
-                step: "3",
-                icon: Activity as LucideIcon,
-                title: "Probe & Measure",
-                desc: "Detect entry points, time cold start, track peak memory via cgroup, measure disk usage.",
-                accent: "from-amber-500 to-orange-500",
-                bg: "bg-amber-50",
-                ring: "ring-amber-200",
-                iconColor: "text-amber-600",
-              },
-              {
-                step: "4",
-                icon: Trophy as LucideIcon,
-                title: "Score",
-                desc: "Combine results into a 0\u2013100 composite score across latency, capabilities, size, and build.",
-                accent: "from-emerald-500 to-green-500",
-                bg: "bg-emerald-50",
-                ring: "ring-emerald-200",
-                iconColor: "text-emerald-600",
-              },
-            ] as const).map((s) => {
-              const Icon = s.icon;
-              return (
-                <div
-                  key={s.step}
-                  className="relative rounded-2xl border border-ocean-200 bg-white p-6 hover:shadow-lg transition-shadow"
-                >
-                  {/* Step number badge */}
-                  <div className="relative z-10 mb-4 flex items-center gap-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bg} ring-1 ${s.ring}`}>
-                      <Icon size={20} className={s.iconColor} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-navy-light">Step {s.step}</span>
-                      <h3 className="font-heading text-base font-bold text-navy leading-tight">{s.title}</h3>
-                    </div>
-                  </div>
-                  <p className="text-sm text-navy-light leading-relaxed">{s.desc}</p>
+        {/* How ClawBench Works — full-bleed section */}
+        <div className="mt-16 -mx-4 sm:-mx-6 lg:-mx-8" id="how-it-works">
+          <section className="bg-gradient-to-b from-ocean-900 via-ocean-800 to-ocean-700 py-16 sm:py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              {/* Section header */}
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium text-ocean-200 mb-4">
+                  <Activity size={14} />
+                  Open Source Benchmark Suite
                 </div>
-              );
-            })}
-          </div>
+                <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white">
+                  How ClawBench Works
+                </h2>
+                <p className="mt-3 text-sm sm:text-base text-ocean-200 max-w-xl mx-auto">
+                  A repeatable, containerized pipeline that tests every fork under real hardware constraints.
+                </p>
+              </div>
 
-          {/* Scoring breakdown — visual weight bars */}
-          <div className="rounded-2xl border border-ocean-200 bg-white overflow-hidden mb-6">
-            <div className="border-b border-ocean-100 bg-gradient-to-r from-ocean-50 to-white px-6 py-4 flex items-center justify-between">
-              <h3 className="font-heading text-base font-bold text-navy">Scoring Breakdown</h3>
-              <span className="text-xs text-navy-light font-mono">100 pts total</span>
-            </div>
-            <div className="p-6 space-y-5">
-              {([
-                { label: "Capabilities", weight: 40, icon: Brain as LucideIcon, color: "bg-violet-500", desc: "8 capability checks: messaging, browser, code exec, memory, files, search, MCP, tool use" },
-                { label: "Latency", weight: 30, icon: Zap as LucideIcon, color: "bg-blue-500", desc: "Cold start time (clone + install + startup). Under 5 seconds = full marks" },
-                { label: "Size", weight: 20, icon: HardDrive as LucideIcon, color: "bg-amber-500", desc: "Total disk footprint after install. Under 20MB = full marks" },
-                { label: "Build", weight: 10, icon: CheckCircle2 as LucideIcon, color: "bg-emerald-500", desc: "5 points for successful dependency install, 5 for successful startup" },
-              ] as const).map((s) => {
-                const Icon = s.icon;
-                return (
-                  <div key={s.label} className="group">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <Icon size={16} className="text-navy-light shrink-0" />
-                      <span className="text-sm font-semibold text-navy flex-1">{s.label}</span>
-                      <span className="text-sm font-bold font-mono text-navy">{s.weight}<span className="text-navy-light font-normal text-xs"> pts</span></span>
+              {/* Pipeline: 4 steps */}
+              <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-14">
+                {/* Connector line (desktop) */}
+                <div className="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px border-t border-dashed border-ocean-400/40" />
+
+                {[
+                  { n: "01", title: "Containerize", desc: "Fork is cloned into a Docker container with CPU and RAM limits matching the target device." },
+                  { n: "02", title: "Build", desc: "Dependencies installed via the native toolchain \u2014 Go, Rust, Python, TypeScript, or C." },
+                  { n: "03", title: "Measure", desc: "Entry point detected, cold start timed, peak memory tracked via cgroup, disk usage measured." },
+                  { n: "04", title: "Score", desc: "Results combined into a 0\u2013100 composite score weighted across four dimensions." },
+                ].map((s) => (
+                  <div key={s.n} className="relative rounded-xl bg-white/[0.06] backdrop-blur-sm border border-white/10 p-5">
+                    <div className="flex items-baseline gap-2.5 mb-3">
+                      <span className="font-mono text-2xl font-bold text-ocean-300/60">{s.n}</span>
+                      <h3 className="font-heading text-base font-bold text-white">{s.title}</h3>
                     </div>
-                    <div className="ml-7">
-                      <div className="h-2 rounded-full bg-ocean-100 overflow-hidden mb-1.5">
-                        <div className={`h-full rounded-full ${s.color} transition-all`} style={{ width: `${s.weight}%` }} />
+                    <p className="text-sm text-ocean-200 leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Scoring — two columns on desktop */}
+              <div className="grid gap-6 lg:grid-cols-5">
+                {/* Left: weight bars */}
+                <div className="lg:col-span-3 rounded-xl bg-white/[0.06] backdrop-blur-sm border border-white/10 p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-heading text-base font-bold text-white">Scoring Breakdown</h3>
+                    <span className="text-xs text-ocean-300 font-mono">100 pts</span>
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { label: "Capabilities", pts: 40, desc: "Messaging, browser, code exec, memory, files, search, MCP, tool use" },
+                      { label: "Latency", pts: 30, desc: "Cold start time \u2014 clone + install + startup. Under 5s = full marks" },
+                      { label: "Size", pts: 20, desc: "Disk footprint after install. Under 20MB = full marks" },
+                      { label: "Build Success", pts: 10, desc: "5 pts for dependency install, 5 pts for successful startup" },
+                    ].map((s) => (
+                      <div key={s.label}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-white">{s.label}</span>
+                          <span className="text-sm font-bold font-mono text-ocean-300">{s.pts}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mb-1">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-ocean-300 to-ocean-400"
+                            style={{ width: `${s.pts}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-ocean-300/80">{s.desc}</p>
                       </div>
-                      <p className="text-xs text-navy-light">{s.desc}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: verdicts + capabilities */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Verdicts */}
+                  <div className="rounded-xl bg-white/[0.06] backdrop-blur-sm border border-white/10 p-6">
+                    <h3 className="font-heading text-base font-bold text-white mb-4">Verdicts</h3>
+                    <div className="space-y-2.5">
+                      {[
+                        { range: "85\u2013100", label: "Runs Great", bar: "w-full", color: "bg-verdict-great" },
+                        { range: "60\u201384", label: "Runs OK", bar: "w-[84%]", color: "bg-ocean-400" },
+                        { range: "30\u201359", label: "Barely Runs", bar: "w-[59%]", color: "bg-amber-400" },
+                        { range: "0\u201329", label: "Won\u2019t Run", bar: "w-[29%]", color: "bg-red-400" },
+                      ].map((v) => (
+                        <div key={v.range} className="flex items-center gap-3">
+                          <div className="w-14 text-right">
+                            <span className="text-xs font-mono text-ocean-200">{v.range}</span>
+                          </div>
+                          <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
+                            <div className={`h-full rounded-full ${v.color} ${v.bar}`} />
+                          </div>
+                          <span className="text-xs font-medium text-ocean-200 w-20">{v.label}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-            {/* Score ranges */}
-            <div className="border-t border-ocean-100 px-6 py-4 flex flex-wrap items-center gap-4 bg-ocean-50/30">
-              <span className="text-xs font-semibold text-navy">Verdicts:</span>
-              {([
-                { range: "85\u2013100", label: "Runs Great", color: "bg-verdict-great/10 text-verdict-great ring-verdict-great/20" },
-                { range: "60\u201384", label: "Runs OK", color: "bg-blue-50 text-blue-600 ring-blue-200" },
-                { range: "30\u201359", label: "Barely Runs", color: "bg-amber-50 text-amber-600 ring-amber-200" },
-                { range: "0\u201329", label: "Won\u2019t Run", color: "bg-red-50 text-verdict-wont ring-red-200" },
-              ] as const).map((v) => (
-                <span key={v.range} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${v.color}`}>
-                  {v.range} {v.label}
-                </span>
-              ))}
-            </div>
-          </div>
 
-          {/* Capability tests — icon grid */}
-          <div className="rounded-2xl border border-ocean-200 bg-white overflow-hidden">
-            <div className="border-b border-ocean-100 bg-gradient-to-r from-ocean-50 to-white px-6 py-4">
-              <h3 className="font-heading text-base font-bold text-navy">8 Capability Tests</h3>
-              <p className="text-xs text-navy-light mt-0.5">Static source analysis + runtime module probing (Python)</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4">
-              {([
-                { name: "Messaging", desc: "WhatsApp, Telegram, Discord, Slack", icon: MessageSquare as LucideIcon, color: "text-blue-500 bg-blue-50" },
-                { name: "Browser", desc: "Puppeteer, Playwright, Selenium", icon: Monitor as LucideIcon, color: "text-purple-500 bg-purple-50" },
-                { name: "Code Exec", desc: "subprocess, child_process, spawn", icon: Code2 as LucideIcon, color: "text-orange-500 bg-orange-50" },
-                { name: "Memory", desc: "SQLite, Redis, ChromaDB, RocksDB", icon: Brain as LucideIcon, color: "text-pink-500 bg-pink-50" },
-                { name: "Files", desc: "Read/write filesystem access", icon: FileText as LucideIcon, color: "text-teal-500 bg-teal-50" },
-                { name: "Web Search", desc: "Google, DuckDuckGo, Tavily", icon: Search as LucideIcon, color: "text-cyan-500 bg-cyan-50" },
-                { name: "MCP", desc: "Model Context Protocol support", icon: Puzzle as LucideIcon, color: "text-indigo-500 bg-indigo-50" },
-                { name: "Tool Use", desc: "Function calling, tool definitions", icon: Globe as LucideIcon, color: "text-emerald-500 bg-emerald-50" },
-              ] as const).map((cap, i) => {
-                const Icon = cap.icon;
-                return (
-                  <div
-                    key={cap.name}
-                    className={`p-4 flex items-start gap-3 ${
-                      i < 4 ? "border-b border-ocean-100" : ""
-                    } ${i % 4 !== 3 ? "border-r border-ocean-100" : ""}`}
-                  >
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${cap.color}`}>
-                      <Icon size={16} />
+                  {/* 8 Capabilities */}
+                  <div className="rounded-xl bg-white/[0.06] backdrop-blur-sm border border-white/10 p-6">
+                    <h3 className="font-heading text-base font-bold text-white mb-4">8 Capability Tests</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        "Messaging", "Browser", "Code Exec", "Memory",
+                        "Files", "Web Search", "MCP", "Tool Use",
+                      ].map((cap) => (
+                        <div key={cap} className="flex items-center gap-2 rounded-lg bg-white/[0.05] px-3 py-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-ocean-300" />
+                          <span className="text-xs font-medium text-ocean-100">{cap}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <div className="text-xs font-semibold text-navy">{cap.name}</div>
-                      <div className="text-[11px] text-navy-light mt-0.5 leading-snug">{cap.desc}</div>
-                    </div>
+                    <p className="mt-3 text-[11px] text-ocean-300/70 leading-relaxed">
+                      Detected via static source analysis and runtime module probing. Each passed test contributes 5 pts to the capabilities score.
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {/* Open source CTA */}
-          <div className="mt-6 flex items-center justify-between rounded-2xl bg-gradient-to-r from-ocean-800 to-ocean-900 px-6 py-4">
-            <div>
-              <p className="text-sm font-medium text-white">ClawBench is fully open source</p>
-              <p className="text-xs text-ocean-300 mt-0.5">Run benchmarks on your own hardware or contribute improvements.</p>
+              {/* Open source CTA */}
+              <div className="mt-10 text-center">
+                <a
+                  href="https://github.com/codyrobertson/canitrunopenclaw/tree/main/clawbench"
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                >
+                  View ClawBench on GitHub &rarr;
+                </a>
+                <p className="mt-2 text-xs text-ocean-300/60">
+                  Run benchmarks locally or contribute improvements
+                </p>
+              </div>
             </div>
-            <a
-              href="https://github.com/codyrobertson/canitrunopenclaw/tree/main/clawbench"
-              target="_blank"
-              rel="noopener"
-              className="shrink-0 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-            >
-              View on GitHub &rarr;
-            </a>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
   );
