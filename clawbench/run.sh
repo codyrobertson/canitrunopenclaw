@@ -287,7 +287,14 @@ fi
 echo "[ClawBench] Running benchmark..."
 echo ""
 
-RESULT=$(timeout 300 docker run "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" 2>&1) || true
+# Use a named container so we can kill it if timeout fires
+CONTAINER_NAME="clawbench-${DEVICE_SLUG}-${FORK_SLUG}"
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+RESULT=$(timeout 300 docker run --name "$CONTAINER_NAME" "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" 2>&1) || true
+
+# Clean up container if timeout killed the client but container kept running
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 # Extract JSON
 JSON_RESULT=$(echo "$RESULT" | grep "^{" | tail -1)
