@@ -126,7 +126,7 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -141,15 +141,15 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
         {/* Main content - 2 cols */}
         <div className="lg:col-span-2 space-y-6">
           {/* Header */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
               <div>
                 <CategoryBadge category={device.category} />
-                <h1 className="font-heading text-3xl font-bold text-navy mt-2">{device.name}</h1>
-                <p className="mt-2 text-navy-light">{device.description}</p>
+                <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy mt-2">{device.name}</h1>
+                <p className="mt-2 text-sm sm:text-base text-navy-light">{device.description}</p>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-2xl font-bold text-ocean-800">
+              <div className="text-left sm:text-right shrink-0">
+                <div className="text-xl sm:text-2xl font-bold text-ocean-800">
                   {device.price_usd ? (device.price_type === "monthly" ? `$${device.price_usd}/mo` : `$${device.price_usd}`) : "Free"}
                 </div>
               </div>
@@ -159,20 +159,20 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
 
             {/* Affiliate Buy Links */}
             {affiliateLinks.length > 0 ? (
-              <div className="mt-6 border-t border-ocean-100 pt-5">
+              <div className="mt-4 sm:mt-6 border-t border-ocean-100 pt-4 sm:pt-5">
                 <h3 className="text-sm font-semibold text-navy mb-3">Where to Buy</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                   {affiliateLinks.map((link) => (
                     <a
                       key={link.id}
                       href={`/go/${device.slug}?network=${link.network}`}
                       target="_blank"
                       rel="noopener"
-                      className="inline-flex items-center gap-2 rounded-lg border border-ocean-200 bg-ocean-50 px-4 py-2 text-sm font-medium text-navy hover:bg-ocean-100 hover:border-ocean-300 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-lg border border-ocean-200 bg-ocean-50 px-4 py-2.5 sm:py-2 text-sm font-medium text-navy hover:bg-ocean-100 hover:border-ocean-300 transition-colors"
                     >
                       <ShoppingCart size={16} className="text-ocean-600" />
                       <span>Buy on {link.label ?? link.network}</span>
-                      <ExternalLink size={12} className="text-ocean-400" />
+                      <ExternalLink size={12} className="text-ocean-400 ml-auto sm:ml-0" />
                     </a>
                   ))}
                 </div>
@@ -194,7 +194,7 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
           </div>
 
           {/* Specs */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <h2 className="font-heading text-lg font-semibold text-navy mb-4">Specifications</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="rounded-lg bg-ocean-50 p-3">
@@ -202,15 +202,15 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
                 <div className="text-lg font-semibold text-navy">{formatRam(device.ram_gb)}</div>
               </div>
               {device.cpu && (
-                <div className="rounded-lg bg-ocean-50 p-3 sm:col-span-2">
+                <div className="rounded-lg bg-ocean-50 p-3 col-span-2 sm:col-span-2">
                   <div className="text-xs text-ocean-600 font-medium">CPU</div>
-                  <div className="text-sm font-semibold text-navy">{device.cpu}</div>
+                  <div className="text-sm font-semibold text-navy break-words">{device.cpu}</div>
                 </div>
               )}
               {device.gpu && (
-                <div className="rounded-lg bg-ocean-50 p-3 sm:col-span-2">
+                <div className="rounded-lg bg-ocean-50 p-3 col-span-2 sm:col-span-2">
                   <div className="text-xs text-ocean-600 font-medium">GPU</div>
-                  <div className="text-sm font-semibold text-navy">{device.gpu}</div>
+                  <div className="text-sm font-semibold text-navy break-words">{device.gpu}</div>
                 </div>
               )}
               {device.storage && (
@@ -229,7 +229,7 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
           </div>
 
           {/* Official Compatibility Verdicts */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="font-heading text-lg font-semibold text-navy">Official Compatibility</h2>
@@ -260,12 +260,12 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
 
             <div className="space-y-4">
               {verdicts.map((v) => (
-                <div key={v.id} className="flex items-start gap-4 rounded-lg border border-ocean-100 p-4">
+                <div key={v.id} className="flex items-start gap-3 sm:gap-4 rounded-lg border border-ocean-100 p-3 sm:p-4">
                   <VerdictBadge verdict={v.verdict} />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Link href={`/forks/${v.fork_slug}`} className="font-medium text-navy hover:text-ocean-800">{v.fork_name}</Link>
                     {v.notes && <p className="mt-1 text-sm text-navy-light">{v.notes}</p>}
-                    <div className="mt-2 flex gap-4 text-xs text-navy-light">
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-navy-light">
                       {v.cold_start_sec && <span className="flex items-center gap-1"><Snowflake size={14} className="text-ocean-600" /> {v.cold_start_sec}s cold start</span>}
                       {v.warm_response_sec && <span className="flex items-center gap-1"><Flame size={14} className="text-orange-500" /> {v.warm_response_sec}s warm</span>}
                     </div>
@@ -277,12 +277,12 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
           </div>
 
           {/* ClawBench Results */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <BenchmarkResults benchmarks={benchmarks} detailsByRunId={detailsByRunId} />
           </div>
 
           {/* Community Reports */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <UserVerdictSection
               deviceId={device.id}
               forks={forks}
@@ -293,7 +293,7 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
           </div>
 
           {/* Comments */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <CommentSection comments={comments} deviceId={device.id} isSignedIn={!!session?.user} />
           </div>
         </div>

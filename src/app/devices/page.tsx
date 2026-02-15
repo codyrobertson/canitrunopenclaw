@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getDevicesRanked, getCategories, getAllForks } from "@/lib/queries";
 import { DeviceCard } from "@/components/device-card";
 import { SearchBar } from "@/components/search-bar";
+import { FilterToggle } from "@/components/filter-toggle";
 import Link from "next/link";
 
 export async function generateMetadata({
@@ -51,36 +52,51 @@ export default async function DevicesPage({
   const categories = getCategories();
   const forks = getAllForks();
 
+  const filterContent = (
+    <div className="space-y-6">
+      <div><Suspense fallback={<div className="h-[42px] rounded-xl bg-ocean-50 animate-pulse" />}><SearchBar placeholder="Search..." /></Suspense></div>
+      <div>
+        <h3 className="text-sm font-semibold text-navy mb-2">Category</h3>
+        <div className="space-y-1">
+          <Link href="/devices" className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${!params.category ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>All</Link>
+          {categories.map((cat) => (
+            <Link key={cat} href={`/devices?category=${cat}${params.q ? `&q=${params.q}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${params.category === cat ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>{cat}</Link>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-navy mb-2">Compatible Fork</h3>
+        <div className="space-y-1">
+          <Link href={`/devices${params.category ? `?category=${params.category}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${!params.fork ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>All Forks</Link>
+          {forks.map((fork) => (
+            <Link key={fork.id} href={`/devices?fork=${fork.slug}${params.category ? `&category=${params.category}` : ""}${params.q ? `&q=${params.q}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${params.fork === fork.slug ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>{fork.name}</Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const hasActiveFilters = !!(params.category || params.fork || params.q);
+
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="font-heading text-3xl font-bold text-navy mb-6">All Devices</h1>
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters Sidebar */}
-        <aside className="lg:w-64 shrink-0">
-          <div className="rounded-xl border border-ocean-200 bg-white p-5 space-y-6 sticky top-24">
-            <div><Suspense fallback={<div className="h-[42px] rounded-xl bg-ocean-50 animate-pulse" />}><SearchBar placeholder="Search..." /></Suspense></div>
-            <div>
-              <h3 className="text-sm font-semibold text-navy mb-2">Category</h3>
-              <div className="space-y-1">
-                <Link href="/devices" className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${!params.category ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>All</Link>
-                {categories.map((cat) => (
-                  <Link key={cat} href={`/devices?category=${cat}${params.q ? `&q=${params.q}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${params.category === cat ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>{cat}</Link>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-navy mb-2">Compatible Fork</h3>
-              <div className="space-y-1">
-                <Link href={`/devices${params.category ? `?category=${params.category}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${!params.fork ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>All Forks</Link>
-                {forks.map((fork) => (
-                  <Link key={fork.id} href={`/devices?fork=${fork.slug}${params.category ? `&category=${params.category}` : ""}${params.q ? `&q=${params.q}` : ""}`} className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${params.fork === fork.slug ? "bg-ocean-100 text-ocean-800 font-medium" : "text-navy-light hover:bg-ocean-50"}`}>{fork.name}</Link>
-                ))}
-              </div>
-            </div>
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy mb-4 sm:mb-6">All Devices</h1>
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        {/* Filters Sidebar - hidden on mobile behind toggle */}
+        <aside className="shrink-0 lg:w-64">
+          {/* Desktop sidebar */}
+          <div className="hidden lg:block rounded-xl border border-ocean-200 bg-white p-5 sticky top-24">
+            {filterContent}
+          </div>
+          {/* Mobile filter toggle */}
+          <div className="lg:hidden">
+            <FilterToggle hasActiveFilters={hasActiveFilters}>
+              {filterContent}
+            </FilterToggle>
           </div>
         </aside>
         {/* Device Grid */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <p className="text-sm text-navy-light mb-4">{devices.length} device{devices.length !== 1 ? "s" : ""} found</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {devices.map((device) => (<DeviceCard key={device.id} device={device} />))}

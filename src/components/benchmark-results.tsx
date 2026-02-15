@@ -98,7 +98,7 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
 
       {expanded && (
         <div className="border-t border-ocean-100 bg-ocean-50/30 p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
             <MetricCard icon={Timer} label="Cold Start" value={summary.cold_start_ms} unit="ms" color="text-ocean-600" />
             <MetricCard icon={Zap} label="Warm Response" value={summary.warm_response_ms} unit="ms" color="text-amber-500" />
             <MetricCard icon={MemoryStick} label="Peak Memory" value={summary.peak_memory_mb} unit="MB" color="text-purple-500" />
@@ -132,8 +132,8 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
           {details.length > 0 && (
             <div className="mt-3">
               <h4 className="text-xs font-semibold text-navy-light uppercase tracking-wider mb-2">All Metrics</h4>
-              <div className="rounded-lg border border-ocean-100 overflow-hidden">
-                <table className="w-full text-xs">
+              <div className="rounded-lg border border-ocean-100 overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full text-xs min-w-[400px]">
                   <thead>
                     <tr className="bg-ocean-50">
                       <th className="text-left px-3 py-1.5 font-medium text-navy-light">Metric</th>

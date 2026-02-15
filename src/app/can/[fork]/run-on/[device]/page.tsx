@@ -121,28 +121,28 @@ export default async function ForkDeviceComboPage({
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
+    <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1 text-sm text-navy-light mb-6">
+      <nav className="flex items-center gap-1 text-xs sm:text-sm text-navy-light mb-4 sm:mb-6 flex-wrap">
         <Link href="/" className="hover:text-ocean-800">Home</Link>
-        <ChevronRight size={14} />
+        <ChevronRight size={14} className="shrink-0" />
         <Link href="/forks" className="hover:text-ocean-800">Forks</Link>
-        <ChevronRight size={14} />
-        <Link href={`/forks/${fork.slug}`} className="hover:text-ocean-800">{fork.name}</Link>
-        <ChevronRight size={14} />
-        <span className="text-navy">{device.name}</span>
+        <ChevronRight size={14} className="shrink-0" />
+        <Link href={`/forks/${fork.slug}`} className="hover:text-ocean-800 truncate max-w-[100px] sm:max-w-none">{fork.name}</Link>
+        <ChevronRight size={14} className="shrink-0" />
+        <span className="text-navy truncate max-w-[100px] sm:max-w-none">{device.name}</span>
       </nav>
 
       {/* Hero */}
-      <div className="rounded-xl border border-ocean-200 bg-white p-8 mb-6">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+      <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8 mb-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold text-navy">
+            <h1 className="font-heading text-xl sm:text-3xl font-bold text-navy">
               Can {fork.name} Run on {device.name}?
             </h1>
             <div className="mt-2 flex items-center gap-3">
@@ -163,17 +163,17 @@ export default async function ForkDeviceComboPage({
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Specs Comparison */}
-          <div className="rounded-xl border border-ocean-200 bg-white p-8">
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
             <h2 className="font-heading text-lg font-semibold text-navy mb-4">
               Specs vs Requirements
             </h2>
             <div className="space-y-4">
               {/* RAM */}
-              <div className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4">
+              <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-ocean-100 p-3 sm:p-4">
                 <MemoryStick size={20} className="text-ocean-600 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-navy">RAM</div>
-                  <div className="flex items-center gap-3 mt-1 text-sm">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1 text-xs sm:text-sm">
                     <span className="text-navy-light">
                       Needs <span className="font-semibold text-navy">{formatRamMb(fork.min_ram_mb)}</span>
                     </span>
@@ -191,16 +191,16 @@ export default async function ForkDeviceComboPage({
               </div>
 
               {/* CPU Cores */}
-              <div className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4">
+              <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-ocean-100 p-3 sm:p-4">
                 <Cpu size={20} className="text-ocean-600 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-navy">CPU</div>
-                  <div className="flex items-center gap-3 mt-1 text-sm">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1 text-xs sm:text-sm">
                     <span className="text-navy-light">
                       Needs <span className="font-semibold text-navy">{fork.min_cpu_cores} core{fork.min_cpu_cores > 1 ? "s" : ""}</span>
                     </span>
                     <span className="text-navy-light">/</span>
-                    <span className="text-navy-light">
+                    <span className="text-navy-light truncate">
                       Has <span className="font-semibold text-navy">{device.cpu ?? "Unknown"}</span>
                     </span>
                   </div>
@@ -208,11 +208,11 @@ export default async function ForkDeviceComboPage({
               </div>
 
               {/* Storage */}
-              <div className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4">
+              <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-ocean-100 p-3 sm:p-4">
                 <HardDrive size={20} className="text-ocean-600 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-navy">Storage</div>
-                  <div className="flex items-center gap-3 mt-1 text-sm">
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1 text-xs sm:text-sm">
                     <span className="text-navy-light">
                       Needs <span className="font-semibold text-navy">{fork.min_storage_mb}MB</span>
                     </span>
@@ -226,11 +226,11 @@ export default async function ForkDeviceComboPage({
 
               {/* Power */}
               {device.power_watts && (
-                <div className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4">
+                <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-ocean-100 p-3 sm:p-4">
                   <Zap size={20} className="text-ocean-600 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-navy">Power Draw</div>
-                    <div className="mt-1 text-sm text-navy-light">
+                    <div className="mt-1 text-xs sm:text-sm text-navy-light">
                       <span className="font-semibold text-navy">{device.power_watts}W</span>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default async function ForkDeviceComboPage({
 
           {/* Performance Data */}
           {(verdict.cold_start_sec || verdict.warm_response_sec) && (
-            <div className="rounded-xl border border-ocean-200 bg-white p-8">
+            <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
               <h2 className="font-heading text-lg font-semibold text-navy mb-4">Performance</h2>
               <div className="grid grid-cols-2 gap-4">
                 {verdict.cold_start_sec && (
@@ -264,8 +264,8 @@ export default async function ForkDeviceComboPage({
 
           {/* Similar Devices */}
           {similarDevices.length > 0 && (
-            <div className="rounded-xl border border-ocean-200 bg-white p-8">
-              <h2 className="font-heading text-lg font-semibold text-navy mb-4">
+            <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
+              <h2 className="font-heading text-base sm:text-lg font-semibold text-navy mb-4">
                 Other {device.category} devices that run {fork.name}
               </h2>
               <div className="space-y-3">

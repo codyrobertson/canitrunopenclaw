@@ -70,9 +70,9 @@ export function DeviceCard({ device }: { device: DeviceWithScore }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-navy-light">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-navy-light">
         <span className="rounded bg-ocean-100 px-2 py-0.5">{formatRam(device.ram_gb)} RAM</span>
-        {device.cpu && <span className="rounded bg-ocean-100 px-2 py-0.5 truncate max-w-[200px]">{device.cpu}</span>}
+        {device.cpu && <span className="rounded bg-ocean-100 px-2 py-0.5 truncate max-w-[140px] sm:max-w-[200px]">{device.cpu}</span>}
         {device.power_watts && <span className="rounded bg-ocean-100 px-2 py-0.5">{device.power_watts}W</span>}
       </div>
 
