@@ -1,6 +1,8 @@
 #!/bin/bash
-# ClawBench Batch Runner
-# Runs ./run.sh for each device x fork combo (non-cloud devices, local forks only).
+# ClawBench Batch Runner v2
+# Runs ./run.sh for each device x fork combo.
+# Excludes: cloud devices, microcontrollers (simulation accuracy too low).
+# Orders: fast forks first (TS/Python/Go), then slow compilers (Rust/C).
 # Skips already-completed benchmarks. Results in clawbench/results/
 
 set -euo pipefail
@@ -12,18 +14,27 @@ RESULTS_DIR="$SCRIPT_DIR/results"
 
 mkdir -p "$RESULTS_DIR"
 
-# Only local forks (min_ram > 0) with valid repos
+# Local forks ordered: interpreted/fast first, compiled/slow last
 FORKS=$(sqlite3 "$DB_PATH" "
   SELECT slug FROM forks
   WHERE min_ram_mb > 0
   AND github_url LIKE 'https://github.com/%'
-  ORDER BY min_ram_mb
+  ORDER BY
+    CASE language
+      WHEN 'TypeScript' THEN 1
+      WHEN 'Python' THEN 2
+      WHEN 'Go' THEN 3
+      WHEN 'C' THEN 4
+      WHEN 'Rust' THEN 5
+      ELSE 6
+    END,
+    min_ram_mb
 ")
 
-# Non-cloud devices ordered by RAM
+# Exclude cloud and microcontrollers (bare metal — can't simulate accurately)
 DEVICES=$(sqlite3 "$DB_PATH" "
   SELECT slug FROM devices
-  WHERE category NOT IN ('Cloud')
+  WHERE category NOT IN ('Cloud', 'Microcontroller')
   ORDER BY ram_gb
 ")
 
@@ -31,10 +42,10 @@ FORK_COUNT=$(echo "$FORKS" | wc -l | tr -d ' ')
 DEVICE_COUNT=$(echo "$DEVICES" | wc -l | tr -d ' ')
 
 echo "=========================================="
-echo "  ClawBench Batch"
+echo "  ClawBench Batch v2"
 echo "=========================================="
 echo "  Local forks: $FORK_COUNT"
-echo "  Devices:     $DEVICE_COUNT"
+echo "  Devices:     $DEVICE_COUNT (excl. cloud + microcontrollers)"
 echo "  Max combos:  $((FORK_COUNT * DEVICE_COUNT))"
 echo "=========================================="
 echo ""
@@ -65,8 +76,8 @@ for FORK_SLUG in $FORKS; do
       echo "  [done] $DEV_SLUG  score=$SCORE"
       COMPLETED=$((COMPLETED + 1))
     elif echo "$OUTPUT" | grep -q '"insufficient_resources"'; then
-      echo "  [fail] $DEV_SLUG  insufficient RAM"
-      FAILED=$((FAILED + 1))
+      echo "  [skip] $DEV_SLUG  insufficient RAM"
+      SKIPPED=$((SKIPPED + 1))
     elif echo "$OUTPUT" | grep -qi 'oom\|killed\|out of memory'; then
       echo "  [oom]  $DEV_SLUG"
       FAILED=$((FAILED + 1))
