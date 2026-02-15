@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Snowflake, Flame, ShoppingCart, ExternalLink } from "lucide-react";
+import { Snowflake, Flame } from "lucide-react";
+import { BuyButton, BuyButtonFallback } from "@/components/buy-button";
 import { getDeviceBySlug, getVerdictsByDevice, getCommentsByDevice, getDeviceRatings, getSimilarDevices, getVerdictCountsByDevice, getAffiliateLinks, getAllForks, getUserVerdictsByDevice, getUserVerdictVotes, getBenchmarksByDevice, getBenchmarksByDeviceAndFork } from "@/lib/queries";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -162,33 +163,20 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
               <div className="mt-4 sm:mt-6 border-t border-ocean-100 pt-4 sm:pt-5">
                 <h3 className="text-sm font-semibold text-navy mb-3">Where to Buy</h3>
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                  {affiliateLinks.map((link) => (
-                    <a
+                  {affiliateLinks.map((link, i) => (
+                    <BuyButton
                       key={link.id}
                       href={`/go/${device.slug}?network=${link.network}`}
-                      target="_blank"
-                      rel="noopener"
-                      className="inline-flex items-center gap-2 rounded-lg border border-ocean-200 bg-ocean-50 px-4 py-2.5 sm:py-2 text-sm font-medium text-navy hover:bg-ocean-100 hover:border-ocean-300 transition-colors"
-                    >
-                      <ShoppingCart size={16} className="text-ocean-600" />
-                      <span>Buy on {link.label ?? link.network}</span>
-                      <ExternalLink size={12} className="text-ocean-400 ml-auto sm:ml-0" />
-                    </a>
+                      network={link.network}
+                      label={link.label}
+                      variant={i === 0 ? "primary" : "secondary"}
+                    />
                   ))}
                 </div>
               </div>
             ) : device.buy_link ? (
               <div className="mt-6 border-t border-ocean-100 pt-5">
-                <a
-                  href={device.buy_link}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center gap-2 rounded-lg border border-ocean-200 bg-ocean-50 px-4 py-2 text-sm font-medium text-navy hover:bg-ocean-100 hover:border-ocean-300 transition-colors"
-                >
-                  <ShoppingCart size={16} className="text-ocean-600" />
-                  <span>Buy {device.name}</span>
-                  <ExternalLink size={12} className="text-ocean-400" />
-                </a>
+                <BuyButtonFallback href={device.buy_link} name={device.name} />
               </div>
             ) : null}
           </div>

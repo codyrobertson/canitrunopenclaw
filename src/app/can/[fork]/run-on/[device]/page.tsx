@@ -12,8 +12,8 @@ import {
   Zap,
   CheckCircle2,
   XCircle,
-  ShoppingCart,
 } from "lucide-react";
+import { BuyButton, BuyButtonFallback } from "@/components/buy-button";
 import {
   getDeviceBySlug,
   getForkBySlug,
@@ -299,34 +299,18 @@ export default async function ForkDeviceComboPage({
             <h3 className="text-sm font-semibold text-navy mb-4">Try It Yourself</h3>
             <div className="space-y-3">
               {affiliateLinks.length > 0 ? (
-                affiliateLinks.map((link) => (
-                  <a
+                affiliateLinks.map((link, i) => (
+                  <BuyButton
                     key={link.id}
                     href={`/go/${device.slug}?network=${link.network}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="flex items-center justify-between rounded-lg border border-ocean-200 p-3 text-sm font-medium text-navy hover:bg-ocean-50 transition-colors"
-                  >
-                    <span className="flex items-center gap-2">
-                      <ShoppingCart size={14} className="text-ocean-600" />
-                      Buy on {link.label ?? link.network}
-                    </span>
-                    <ExternalLink size={14} className="text-ocean-600" />
-                  </a>
+                    network={link.network}
+                    label={link.label}
+                    variant={i === 0 ? "primary" : "secondary"}
+                    size="sm"
+                  />
                 ))
               ) : device.buy_link ? (
-                <a
-                  href={`/go/${device.slug}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="flex items-center justify-between rounded-lg border border-ocean-200 p-3 text-sm font-medium text-navy hover:bg-ocean-50 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShoppingCart size={14} className="text-ocean-600" />
-                    Buy {device.name}
-                  </span>
-                  <ExternalLink size={14} className="text-ocean-600" />
-                </a>
+                <BuyButtonFallback href={`/go/${device.slug}`} name={device.name} />
               ) : null}
               {fork.github_url && (
                 <a
