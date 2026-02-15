@@ -1,0 +1,11 @@
+{
+  "name": "clawbench",
+  "version": "1.0.0",
+  "description": "ClawBench - Automated benchmarking for OpenClaw forks",
+  "scripts": {
+    "bench": "./run.sh",
+    "build": "docker build -t clawbench:latest ."
+  },
+  "keywords": ["openclaw", "benchmark", "docker", "ai-agents"],
+  "license": "MIT"
+}
