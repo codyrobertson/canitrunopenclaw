@@ -1,304 +1,274 @@
 #!/bin/bash
 # ClawBench - OpenClaw Fork Benchmark
-# Runs inside a resource-constrained Docker container
-# Outputs JSON results to stdout
+# Runs inside a resource-constrained Docker container.
+# Measures real clone, install, disk, startup, memory, and capabilities.
+# Outputs JSON results to stdout. All logs go to stderr.
 
 set -euo pipefail
 
 FORK_REPO="${FORK_REPO:?FORK_REPO env var required}"
-FORK_LANG="${FORK_LANG:-python}"
-API_ENDPOINT="${API_ENDPOINT:-}"
+FORK_LANG="${FORK_LANG:-unknown}"
 DEVICE_SLUG="${DEVICE_SLUG:-unknown}"
 FORK_SLUG="${FORK_SLUG:-unknown}"
+API_ENDPOINT="${API_ENDPOINT:-}"
 API_KEY="${API_KEY:-}"
+MEMORY_LIMIT="${MEMORY_LIMIT:-0}"
+CPU_LIMIT="${CPU_LIMIT:-0}"
 
-# Result storage
-RESULTS_DIR="/tmp/clawbench-results"
-mkdir -p "$RESULTS_DIR"
+log() { echo "[ClawBench] $*" >&2; }
 
-log() {
-  echo "[ClawBench] $*" >&2
-}
-
-measure_time() {
-  local start end
-  start=$(date +%s%N)
-  eval "$@" >/dev/null 2>&1 || true
-  end=$(date +%s%N)
-  echo $(( (end - start) / 1000000 ))
-}
-
-get_memory_mb() {
-  # Try /proc first (Linux), fall back to ps
-  if [ -f /proc/self/status ]; then
-    grep VmRSS /proc/self/status 2>/dev/null | awk '{print int($2/1024)}' || echo "0"
-  else
-    ps -o rss= -p $$ 2>/dev/null | awk '{print int($1/1024)}' || echo "0"
-  fi
-}
-
-get_cpu_percent() {
-  # Sample CPU over 2 seconds
-  local cpu1 cpu2
-  if [ -f /proc/stat ]; then
-    cpu1=$(cat /proc/stat | head -1 | awk '{print $2+$3+$4+$5+$6+$7+$8}')
-    idle1=$(cat /proc/stat | head -1 | awk '{print $5}')
-    sleep 2
-    cpu2=$(cat /proc/stat | head -1 | awk '{print $2+$3+$4+$5+$6+$7+$8}')
-    idle2=$(cat /proc/stat | head -1 | awk '{print $5}')
-    local total=$((cpu2 - cpu1))
-    local idle=$((idle2 - idle1))
-    if [ "$total" -gt 0 ]; then
-      echo $(( (total - idle) * 100 / total ))
-    else
-      echo "0"
-    fi
-  else
-    echo "50"
-  fi
-}
+now_ms() { date +%s%N | cut -b1-13; }
 
 # ============================================================
-# Phase 1: Clone and Install
+# Phase 1: Clone
 # ============================================================
 log "Phase 1: Cloning $FORK_REPO..."
-CLONE_START=$(date +%s%N)
-git clone --depth 1 "$FORK_REPO" /bench/fork 2>&1 | tail -1 >&2 || {
-  log "ERROR: Failed to clone $FORK_REPO"
-  echo '{"error": "clone_failed"}'
+CLONE_START=$(now_ms)
+if ! git clone --depth 1 "$FORK_REPO" /bench/fork 2>&1 | tail -3 >&2; then
+  log "FATAL: Clone failed"
+  cat <<JSONEOF
+{"error":"clone_failed","device_slug":"${DEVICE_SLUG}","fork_slug":"${FORK_SLUG}"}
+JSONEOF
   exit 1
-}
-CLONE_END=$(date +%s%N)
-CLONE_MS=$(( (CLONE_END - CLONE_START) / 1000000 ))
-log "Clone completed in ${CLONE_MS}ms"
+fi
+CLONE_MS=$(( $(now_ms) - CLONE_START ))
+log "Clone: ${CLONE_MS}ms"
 
 cd /bench/fork
 
-log "Phase 1: Installing dependencies (lang: $FORK_LANG)..."
-INSTALL_START=$(date +%s%N)
+# ============================================================
+# Phase 2: Install dependencies
+# ============================================================
+log "Phase 2: Installing ($FORK_LANG)..."
+INSTALL_START=$(now_ms)
+
 case "$FORK_LANG" in
-  python)
+  python|Python)
     python3 -m venv /bench/venv 2>&1 | tail -1 >&2 || true
     if [ -f requirements.txt ]; then
-      /bench/venv/bin/pip install -r requirements.txt 2>&1 | tail -3 >&2 || true
+      /bench/venv/bin/pip install -q -r requirements.txt 2>&1 | tail -5 >&2 || true
     elif [ -f pyproject.toml ]; then
-      /bench/venv/bin/pip install . 2>&1 | tail -3 >&2 || true
+      /bench/venv/bin/pip install -q . 2>&1 | tail -5 >&2 || true
+    elif [ -f setup.py ]; then
+      /bench/venv/bin/pip install -q . 2>&1 | tail -5 >&2 || true
     fi
     ;;
-  typescript|javascript)
+  typescript|TypeScript|javascript|JavaScript)
     if [ -f package.json ]; then
-      npm install --production 2>&1 | tail -3 >&2 || true
+      npm install --production --ignore-scripts 2>&1 | tail -5 >&2 || true
     fi
     ;;
-  go)
-    if [ -f go.mod ]; then
-      go build ./... 2>&1 | tail -3 >&2 || true
+  go|Go)
+    if command -v go &>/dev/null && [ -f go.mod ]; then
+      go build ./... 2>&1 | tail -5 >&2 || true
     fi
     ;;
-  rust)
-    if [ -f Cargo.toml ]; then
-      cargo build --release 2>&1 | tail -3 >&2 || true
-    fi
-    ;;
-  c)
-    if [ -f Makefile ]; then
-      make 2>&1 | tail -3 >&2 || true
-    elif [ -f CMakeLists.txt ]; then
-      mkdir -p build && cd build && cmake .. && make 2>&1 | tail -3 >&2 || true
-      cd /bench/fork
-    fi
+  *)
+    log "No install strategy for language: $FORK_LANG"
     ;;
 esac
-INSTALL_END=$(date +%s%N)
-INSTALL_MS=$(( (INSTALL_END - INSTALL_START) / 1000000 ))
-log "Install completed in ${INSTALL_MS}ms"
+
+INSTALL_MS=$(( $(now_ms) - INSTALL_START ))
+log "Install: ${INSTALL_MS}ms"
 
 # ============================================================
-# Phase 2: Cold Start Measurement
+# Phase 3: Measure disk usage
 # ============================================================
-log "Phase 2: Measuring cold start time..."
-COLD_START_MS=$(measure_time "timeout 60 node --version")
-# For actual forks, this would start the agent and time first response
-# Simulating with install + first-run overhead
-COLD_START_MS=$((CLONE_MS + INSTALL_MS))
-log "Cold start: ${COLD_START_MS}ms"
+DISK_KB=$(du -sk /bench/fork 2>/dev/null | awk '{print $1}')
+DISK_MB=$(( DISK_KB / 1024 ))
+log "Disk usage: ${DISK_MB}MB"
 
 # ============================================================
-# Phase 3: Warm Response Measurement
+# Phase 4: Detect entry point and attempt startup
 # ============================================================
-log "Phase 3: Measuring warm response time..."
-WARM_TOTAL=0
-WARM_RUNS=5
-for i in $(seq 1 $WARM_RUNS); do
-  RESPONSE_MS=$(measure_time "echo 'test' | timeout 10 cat")
-  WARM_TOTAL=$((WARM_TOTAL + RESPONSE_MS + 50))  # Add baseline overhead
-done
-WARM_RESPONSE_MS=$((WARM_TOTAL / WARM_RUNS))
-log "Warm response avg: ${WARM_RESPONSE_MS}ms"
+log "Phase 4: Entry point detection..."
+ENTRY_POINT=""
+STARTUP_MS=0
+STARTUP_OK=false
 
-# ============================================================
-# Phase 4: Capability Tests
-# ============================================================
-log "Phase 4: Testing capabilities..."
-
-# Check for messaging support
-CAP_MESSAGING=false
-if grep -rq "whatsapp\|telegram\|discord\|slack\|messaging" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" --include="*.swift" --include="*.c" 2>/dev/null; then
-  CAP_MESSAGING=true
-fi
-
-# Check for browser automation
-CAP_BROWSER=false
-if grep -rq "puppeteer\|playwright\|selenium\|browser\|headless" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" 2>/dev/null; then
-  CAP_BROWSER=true
-fi
-
-# Check for code execution
-CAP_CODE_EXEC=false
-if grep -rq "exec\|spawn\|subprocess\|shell\|command" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" 2>/dev/null; then
-  CAP_CODE_EXEC=true
-fi
-
-# Check for memory/persistence
-CAP_MEMORY=false
-if grep -rq "memory\|persist\|storage\|database\|sqlite\|redis" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" 2>/dev/null; then
-  CAP_MEMORY=true
-fi
-
-# Check for file management
-CAP_FILES=false
-if grep -rq "readFile\|writeFile\|filesystem\|file_manager\|open(" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" 2>/dev/null; then
-  CAP_FILES=true
-fi
-
-# Check for web search
-CAP_SEARCH=false
-if grep -rq "search\|google\|bing\|duckduckgo\|web_search" /bench/fork --include="*.ts" --include="*.py" --include="*.go" --include="*.rs" 2>/dev/null; then
-  CAP_SEARCH=true
-fi
-
-# Count capabilities
-CAP_PASSED=0
-CAP_TOTAL=6
-$CAP_MESSAGING && CAP_PASSED=$((CAP_PASSED + 1))
-$CAP_BROWSER && CAP_PASSED=$((CAP_PASSED + 1))
-$CAP_CODE_EXEC && CAP_PASSED=$((CAP_PASSED + 1))
-$CAP_MEMORY && CAP_PASSED=$((CAP_PASSED + 1))
-$CAP_FILES && CAP_PASSED=$((CAP_PASSED + 1))
-$CAP_SEARCH && CAP_PASSED=$((CAP_PASSED + 1))
-
-log "Capabilities: ${CAP_PASSED}/${CAP_TOTAL} passed"
-
-# ============================================================
-# Phase 5: Resource Profiling
-# ============================================================
-log "Phase 5: Profiling resource usage..."
-PEAK_MEMORY=$(get_memory_mb)
-CPU_PERCENT=$(get_cpu_percent)
-
-# ============================================================
-# Phase 6: Concurrency Test
-# ============================================================
-log "Phase 6: Testing concurrency..."
-MAX_CONCURRENT=1
-for count in 2 4 8; do
-  log "Testing $count concurrent processes..."
-  SUCCESS=true
-  for i in $(seq 1 $count); do
-    (sleep 0.1 && echo "agent $i") &
-  done
-  wait || SUCCESS=false
-  if $SUCCESS; then
-    MAX_CONCURRENT=$count
-  else
+# Try common entry points (files)
+for candidate in \
+  "src/index.ts" "index.ts" "src/main.ts" "main.ts" \
+  "src/index.js" "index.js" "src/main.js" "main.js" \
+  "main.py" "app.py" "src/main.py" "bot.py" "run.py" \
+  "cmd/main.go" "main.go" \
+  "src/main.rs"; do
+  if [ -f "$candidate" ]; then
+    ENTRY_POINT="$candidate"
     break
   fi
 done
-log "Max concurrent agents: ${MAX_CONCURRENT}"
 
-# ============================================================
-# Phase 7: Calculate Overall Score
-# ============================================================
-# Score formula (0-100):
-# - Latency: 30 points (cold start < 10s = 30, < 30s = 20, < 60s = 10)
-# - Capabilities: 40 points (proportional to passed/total)
-# - Resources: 30 points (memory < 256MB = 30, < 512MB = 20, < 1024MB = 10)
-
-LATENCY_SCORE=0
-if [ "$COLD_START_MS" -lt 10000 ]; then
-  LATENCY_SCORE=30
-elif [ "$COLD_START_MS" -lt 30000 ]; then
-  LATENCY_SCORE=20
-elif [ "$COLD_START_MS" -lt 60000 ]; then
-  LATENCY_SCORE=10
+# Check for Python package with __main__.py
+if [ -z "$ENTRY_POINT" ]; then
+  for pkg_dir in */; do
+    if [ -f "${pkg_dir}__main__.py" ]; then
+      ENTRY_POINT="pymod:${pkg_dir%/}"
+      break
+    fi
+  done
 fi
 
+# Check for Dockerfile CMD/ENTRYPOINT
+if [ -z "$ENTRY_POINT" ] && [ -f Dockerfile ]; then
+  DOCKER_CMD=$(grep -E "^(CMD|ENTRYPOINT)" Dockerfile 2>/dev/null | tail -1 || true)
+  if [ -n "$DOCKER_CMD" ]; then
+    ENTRY_POINT="docker:Dockerfile"
+  fi
+fi
+
+# Check package.json for "main" or "start" script
+if [ -z "$ENTRY_POINT" ] && [ -f package.json ]; then
+  ENTRY_POINT=$(python3 -c "
+import json
+with open('package.json') as f:
+    p = json.load(f)
+    m = p.get('main','')
+    if m: print(m)
+    elif 'start' in p.get('scripts',{}): print('npm:start')
+" 2>/dev/null || true)
+fi
+
+if [ -n "$ENTRY_POINT" ]; then
+  log "Found entry point: $ENTRY_POINT"
+
+  STARTUP_START=$(now_ms)
+
+  case "$ENTRY_POINT" in
+    pymod:*)
+      MODULE="${ENTRY_POINT#pymod:}"
+      timeout 15 /bench/venv/bin/python -m "$MODULE" --help 2>&1 | head -3 >&2 && STARTUP_OK=true || true
+      ;;
+    docker:*)
+      # Can't run Docker inside Docker, but entry point exists
+      STARTUP_OK=true
+      ;;
+    *.py)
+      timeout 15 /bench/venv/bin/python "$ENTRY_POINT" --help 2>&1 | head -3 >&2 && STARTUP_OK=true || true
+      ;;
+    *.ts)
+      if command -v npx &>/dev/null; then
+        timeout 15 npx tsx "$ENTRY_POINT" --help 2>&1 | head -3 >&2 && STARTUP_OK=true || true
+      fi
+      ;;
+    *.js)
+      timeout 15 node "$ENTRY_POINT" --help 2>&1 | head -3 >&2 && STARTUP_OK=true || true
+      ;;
+    npm:start)
+      timeout 15 npm start 2>&1 | head -5 >&2 && STARTUP_OK=true || true
+      ;;
+    *.go)
+      if command -v go &>/dev/null; then
+        timeout 15 go run "$ENTRY_POINT" --help 2>&1 | head -3 >&2 && STARTUP_OK=true || true
+      fi
+      ;;
+  esac
+
+  STARTUP_MS=$(( $(now_ms) - STARTUP_START ))
+  log "Startup attempt: ${STARTUP_MS}ms (ok=$STARTUP_OK)"
+else
+  log "No entry point found"
+fi
+
+# ============================================================
+# Phase 5: Capability detection (static analysis)
+# ============================================================
+log "Phase 5: Scanning capabilities..."
+
+SRC_GLOBS="--include=*.ts --include=*.js --include=*.py --include=*.go --include=*.rs --include=*.c --include=*.swift --include=*.ex --include=*.exs --include=*.cpp"
+
+cap_check() {
+  local name="$1"
+  shift
+  grep -rql "$@" $SRC_GLOBS /bench/fork 2>/dev/null && echo "true" || echo "false"
+}
+
+CAP_MESSAGING=$(cap_check messaging -E "whatsapp|telegram|discord|slack" -i)
+CAP_BROWSER=$(cap_check browser -E "puppeteer|playwright|selenium|headless|browser" -i)
+CAP_CODE_EXEC=$(cap_check code_exec -E "subprocess|child_process|exec\(|spawn\(|os\.system" -i)
+CAP_MEMORY=$(cap_check memory -E "memory|persist|sqlite|redis|vectordb|chromadb" -i)
+CAP_FILES=$(cap_check files -E "readFile|writeFile|open\(|os\.path|pathlib" -i)
+CAP_SEARCH=$(cap_check search -E "web.search|google|duckduckgo|serp|tavily" -i)
+CAP_MCP=$(cap_check mcp -E "mcp|model.context.protocol|McpServer" -i)
+CAP_TOOLS=$(cap_check tools -E "tool_use|function_call|tools.*\[|@tool" -i)
+
+CAP_PASSED=0
+for c in $CAP_MESSAGING $CAP_BROWSER $CAP_CODE_EXEC $CAP_MEMORY $CAP_FILES $CAP_SEARCH $CAP_MCP $CAP_TOOLS; do
+  [ "$c" = "true" ] && CAP_PASSED=$((CAP_PASSED + 1))
+done
+CAP_TOTAL=8
+log "Capabilities: ${CAP_PASSED}/${CAP_TOTAL}"
+
+# ============================================================
+# Phase 6: Memory snapshot
+# ============================================================
+MEM_AVAILABLE_KB=0
+MEM_LIMIT_KB=0
+if [ -f /sys/fs/cgroup/memory.max ] 2>/dev/null; then
+  # cgroup v2
+  MEM_LIMIT_KB=$(( $(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo 0) / 1024 ))
+  MEM_USED_KB=$(( $(cat /sys/fs/cgroup/memory.current 2>/dev/null || echo 0) / 1024 ))
+elif [ -f /sys/fs/cgroup/memory/memory.usage_in_bytes ] 2>/dev/null; then
+  # cgroup v1
+  MEM_LIMIT_KB=$(( $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo 0) / 1024 ))
+  MEM_USED_KB=$(( $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || echo 0) / 1024 ))
+else
+  MEM_USED_KB=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo 0)
+fi
+PEAK_MEMORY_MB=$(( MEM_USED_KB / 1024 ))
+log "Memory used: ${PEAK_MEMORY_MB}MB"
+
+# ============================================================
+# Phase 7: Line count
+# ============================================================
+LINES=$(find /bench/fork -type f \( -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.c" -o -name "*.swift" -o -name "*.ex" -o -name "*.cpp" \) \
+  ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/vendor/*" ! -path "*/__pycache__/*" \
+  -exec cat {} + 2>/dev/null | wc -l | tr -d ' ')
+log "Source lines: $LINES"
+
+# ============================================================
+# Phase 8: Score
+# ============================================================
+# Cold start = clone + install + startup
+COLD_START_MS=$((CLONE_MS + INSTALL_MS + STARTUP_MS))
+
+# Latency: 30 pts
+LATENCY_SCORE=0
+if [ "$COLD_START_MS" -lt 10000 ]; then LATENCY_SCORE=30
+elif [ "$COLD_START_MS" -lt 30000 ]; then LATENCY_SCORE=20
+elif [ "$COLD_START_MS" -lt 60000 ]; then LATENCY_SCORE=10
+fi
+
+# Capabilities: 40 pts
 CAP_SCORE=$(( CAP_PASSED * 40 / CAP_TOTAL ))
 
-RESOURCE_SCORE=0
-if [ "$PEAK_MEMORY" -lt 256 ]; then
-  RESOURCE_SCORE=30
-elif [ "$PEAK_MEMORY" -lt 512 ]; then
-  RESOURCE_SCORE=20
-elif [ "$PEAK_MEMORY" -lt 1024 ]; then
-  RESOURCE_SCORE=10
+# Size: 30 pts (smaller = better for constrained devices)
+SIZE_SCORE=0
+if [ "$DISK_MB" -lt 50 ]; then SIZE_SCORE=30
+elif [ "$DISK_MB" -lt 200 ]; then SIZE_SCORE=20
+elif [ "$DISK_MB" -lt 500 ]; then SIZE_SCORE=10
 fi
 
-OVERALL_SCORE=$((LATENCY_SCORE + CAP_SCORE + RESOURCE_SCORE))
-log "Overall score: ${OVERALL_SCORE}/100 (latency=${LATENCY_SCORE}, cap=${CAP_SCORE}, resource=${RESOURCE_SCORE})"
+OVERALL_SCORE=$((LATENCY_SCORE + CAP_SCORE + SIZE_SCORE))
+log "Score: ${OVERALL_SCORE}/100 (latency=${LATENCY_SCORE} cap=${CAP_SCORE} size=${SIZE_SCORE})"
 
 # ============================================================
 # Output JSON
 # ============================================================
-OUTPUT=$(cat <<JSONEOF
-{
-  "device_slug": "${DEVICE_SLUG}",
-  "fork_slug": "${FORK_SLUG}",
-  "results": {
-    "latency": {
-      "cold_start_ms": ${COLD_START_MS},
-      "warm_response_ms": ${WARM_RESPONSE_MS},
-      "clone_ms": ${CLONE_MS},
-      "install_ms": ${INSTALL_MS}
-    },
-    "capabilities": {
-      "messaging": ${CAP_MESSAGING},
-      "browser_automation": ${CAP_BROWSER},
-      "code_execution": ${CAP_CODE_EXEC},
-      "persistent_memory": ${CAP_MEMORY},
-      "file_management": ${CAP_FILES},
-      "web_search": ${CAP_SEARCH}
-    },
-    "resources": {
-      "peak_memory_mb": ${PEAK_MEMORY},
-      "cpu_avg_percent": ${CPU_PERCENT},
-      "max_concurrent": ${MAX_CONCURRENT}
-    }
-  },
-  "docker_config": {
-    "memory_limit_mb": ${MEMORY_LIMIT:-0},
-    "cpu_limit": ${CPU_LIMIT:-0}
-  },
-  "overall_score": ${OVERALL_SCORE}
-}
-JSONEOF
-)
-
-echo "$OUTPUT"
+echo '{"device_slug":"'"${DEVICE_SLUG}"'","fork_slug":"'"${FORK_SLUG}"'","results":{"latency":{"cold_start_ms":'"${COLD_START_MS}"',"clone_ms":'"${CLONE_MS}"',"install_ms":'"${INSTALL_MS}"',"startup_ms":'"${STARTUP_MS}"',"startup_ok":'"${STARTUP_OK}"'},"capabilities":{"messaging":'"${CAP_MESSAGING}"',"browser_automation":'"${CAP_BROWSER}"',"code_execution":'"${CAP_CODE_EXEC}"',"persistent_memory":'"${CAP_MEMORY}"',"file_management":'"${CAP_FILES}"',"web_search":'"${CAP_SEARCH}"',"mcp":'"${CAP_MCP}"',"tool_use":'"${CAP_TOOLS}"',"passed":'"${CAP_PASSED}"',"total":'"${CAP_TOTAL}"'},"size":{"disk_mb":'"${DISK_MB}"',"source_lines":'"${LINES}"'},"resources":{"peak_memory_mb":'"${PEAK_MEMORY_MB}"'}},"entry_point":"'"${ENTRY_POINT}"'","docker_constraints":{"memory_limit_mb":'"${MEMORY_LIMIT}"',"cpu_limit":'"${CPU_LIMIT}"'},"overall_score":'"${OVERALL_SCORE}"'}'
 
 # ============================================================
 # Optional: POST to API
 # ============================================================
 if [ -n "$API_ENDPOINT" ]; then
   log "Submitting results to $API_ENDPOINT..."
-  HEADERS="-H 'Content-Type: application/json'"
-  if [ -n "$API_KEY" ]; then
-    HEADERS="$HEADERS -H 'x-clawbench-key: $API_KEY'"
-  fi
-  curl -s -X POST "$API_ENDPOINT" \
+  curl -sf -X POST "$API_ENDPOINT" \
     -H "Content-Type: application/json" \
     ${API_KEY:+-H "x-clawbench-key: $API_KEY"} \
-    -d "$OUTPUT" >&2 || log "WARNING: Failed to submit results"
+    -d @- <<< "$(cat <<JSONEOF
+{"device_slug":"${DEVICE_SLUG}","fork_slug":"${FORK_SLUG}","overall_score":${OVERALL_SCORE},"results":{"cold_start_ms":${COLD_START_MS},"disk_mb":${DISK_MB},"source_lines":${LINES},"capabilities_passed":${CAP_PASSED},"startup_ok":${STARTUP_OK}}}
+JSONEOF
+)" >&2 || log "WARNING: Failed to submit results"
 fi
 
-log "Benchmark complete!"
+log "Done."
