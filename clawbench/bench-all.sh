@@ -17,7 +17,6 @@ FORKS=$(sqlite3 "$DB_PATH" "
   SELECT slug FROM forks
   WHERE min_ram_mb > 0
   AND github_url LIKE 'https://github.com/%'
-  AND slug IN ('openclaw','nanoclaw','nanobot','picoclaw')
   ORDER BY min_ram_mb
 ")
 

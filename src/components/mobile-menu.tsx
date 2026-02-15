@@ -41,6 +41,13 @@ export function MobileMenu() {
             >
               Compare
             </Link>
+            <Link
+              href="/benchmarks"
+              onClick={() => setOpen(false)}
+              className="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-navy-light hover:text-ocean-800 hover:bg-ocean-50 transition-colors"
+            >
+              Benchmarks
+            </Link>
           </div>
         </div>
       )}

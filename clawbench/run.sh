@@ -291,7 +291,14 @@ echo ""
 CONTAINER_NAME="clawbench-${DEVICE_SLUG}-${FORK_SLUG}"
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-RESULT=$(timeout 300 docker run --name "$CONTAINER_NAME" "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" 2>&1) || true
+# Rust/Go forks need more time for compilation on constrained CPUs
+BENCH_TIMEOUT=300
+case "$FORK_LANG" in
+  Rust|rust) BENCH_TIMEOUT=600 ;;
+  Go|go)     BENCH_TIMEOUT=450 ;;
+esac
+
+RESULT=$(timeout $BENCH_TIMEOUT docker run --name "$CONTAINER_NAME" "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" 2>&1) || true
 
 # Clean up container if timeout killed the client but container kept running
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true

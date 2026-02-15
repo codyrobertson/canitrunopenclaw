@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import {
   Anchor,
   GitFork,
-  Github,
   Scale,
   Settings,
   Trophy,
@@ -279,29 +278,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-ocean-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">&#x1F980;</span>
-              <span className="font-heading font-bold text-navy">Can it run OpenClaw?</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-navy-light">
-              <Link href="/devices" className="hover:text-ocean-800 transition-colors">Devices</Link>
-              <Link href="/forks" className="hover:text-ocean-800 transition-colors">Forks</Link>
-              <Link href="/compare" className="hover:text-ocean-800 transition-colors">Compare</Link>
-              <a href="https://github.com/openclaw/openclaw" className="inline-flex items-center gap-1 hover:text-ocean-800 transition-colors" target="_blank" rel="noopener">
-                <Github size={14} /> GitHub
-              </a>
-            </div>
-          </div>
-          <div className="mt-6 border-t border-ocean-100 pt-6 text-center text-xs text-navy-light">
-            <p>An open hardware compatibility directory. Not affiliated with OpenClaw.</p>
-            <p className="mt-1">Data sourced from community benchmarks and official documentation.</p>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

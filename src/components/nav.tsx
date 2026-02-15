@@ -27,6 +27,9 @@ export async function Nav() {
               <Link href="/compare" className="text-sm font-medium text-navy-light hover:text-ocean-800 transition-colors">
                 Compare
               </Link>
+              <Link href="/benchmarks" className="text-sm font-medium text-navy-light hover:text-ocean-800 transition-colors">
+                Benchmarks
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">

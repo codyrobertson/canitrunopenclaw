@@ -34,12 +34,10 @@ export function seedDatabase() {
     { slug: "nanoclaw", name: "NanoClaw", github_url: "https://github.com/qwibitai/nanoclaw", description: "Container-isolated OpenClaw alternative. Runs in Apple Containers or Docker for security. ~3K lines of TypeScript. Per-group isolation with separate memory/filesystem per conversation. Each chat gets its own sandboxed environment.", tagline: "Security through isolation", creator: "Qwibit AI", created_year: 2025, github_stars: 3200, maturity: "beta", last_commit_date: "2026-02-10", min_ram_mb: 512, min_cpu_cores: 1, min_storage_mb: 500, language: "TypeScript", codebase_size_lines: 3000, license: "MIT", features: JSON.stringify(["Container isolation", "Per-group memory", "WhatsApp integration", "Security-first", "Auditable codebase"]) },
     { slug: "nanobot", name: "Nanobot", github_url: "https://github.com/HKUDS/nanobot", description: "Ultra-lightweight personal AI assistant. 99% smaller than OpenClaw at ~4K lines of Python. MCP-based architecture with pluggable servers. Built for people who want a simple, hackable AI companion.", tagline: "99% smaller, 100% personal", creator: "HKUDS Research Group", created_year: 2025, github_stars: 8900, maturity: "stable", last_commit_date: "2026-02-08", min_ram_mb: 256, min_cpu_cores: 1, min_storage_mb: 200, language: "Python", codebase_size_lines: 4000, license: "MIT", features: JSON.stringify(["MCP-based", "Telegram + WhatsApp", "Persistent memory", "Web search", "Background agents", "Pluggable servers"]) },
     { slug: "picoclaw", name: "PicoClaw", github_url: "https://github.com/sipeed/picoclaw", description: "Ultra-lightweight AI assistant in Go. Runs on <10MB RAM. Boots in 1 second on a $10 RISC-V board. Single binary across RISC-V, ARM, and x86. The smallest fork that can still hold a conversation.", tagline: "AI on a $10 board", creator: "Sipeed Community", created_year: 2025, github_stars: 5600, maturity: "stable", last_commit_date: "2026-01-28", min_ram_mb: 10, min_cpu_cores: 1, min_storage_mb: 50, language: "Go", codebase_size_lines: 4000, license: "Apache-2.0", features: JSON.stringify(["<10MB RAM", "1s boot time", "Single binary", "RISC-V support", "Telegram + Discord"]) },
-    { slug: "mimiclaw", name: "MimiClaw", github_url: "https://github.com/nicholasgasior/mimiclaw", description: "OpenClaw for ESP32-S3 microcontrollers. Written in C with ESP-IDF 5.5. Controls GPIO, sensors, and actuators. 0.5W power consumption. Perfect for IoT and home automation with AI.", tagline: "AI meets microcontrollers", creator: "Nicholas Gasior", created_year: 2025, github_stars: 1800, maturity: "beta", last_commit_date: "2026-01-15", min_ram_mb: 8, min_cpu_cores: 1, min_storage_mb: 16, language: "C", codebase_size_lines: 2000, license: "MIT", features: JSON.stringify(["ESP32-S3 native", "GPIO control", "Sensor reading", "0.5W power", "Persistent memory across reboots", "Telegram integration"]) },
-    { slug: "ironclaw", name: "IronClaw", github_url: "https://github.com/nicholasgasior/ironclaw", description: "Security-focused OpenClaw rewrite in Rust. All tools sandboxed in isolated WebAssembly environments. Built by NEAR AI for private key protection. Zero unsafe code. Formal verification of core logic.", tagline: "Trust no tool", creator: "NEAR AI", created_year: 2024, github_stars: 6400, maturity: "beta", last_commit_date: "2026-02-11", min_ram_mb: 512, min_cpu_cores: 2, min_storage_mb: 500, language: "Rust", codebase_size_lines: 15000, license: "Apache-2.0", features: JSON.stringify(["WASM sandboxing", "Rust memory safety", "Private key protection", "Capability-based permissions"]) },
+    { slug: "mimiclaw", name: "MimiClaw", github_url: "https://github.com/memovai/mimiclaw", description: "Run OpenClaw on a $5 chip. No OS, no Node.js, no Mac mini, no Raspberry Pi, no VPS. Written in C with ESP-IDF 5.5. Controls GPIO, sensors, and actuators. 0.5W power consumption. Privacy-first, local-first memory.", tagline: "Run OpenClaw on a $5 chip", creator: "Memov AI", created_year: 2025, github_stars: 1891, maturity: "beta", last_commit_date: "2026-02-13", min_ram_mb: 8, min_cpu_cores: 1, min_storage_mb: 16, language: "C", codebase_size_lines: 2000, license: "MIT", features: JSON.stringify(["ESP32-S3 native", "GPIO control", "Sensor reading", "0.5W power", "Persistent memory across reboots", "Telegram integration"]) },
+    { slug: "ironclaw", name: "IronClaw", github_url: "https://github.com/nearai/ironclaw", description: "Security-focused OpenClaw rewrite in Rust by NEAR AI. All tools sandboxed in isolated WebAssembly environments. Built for private key protection. Zero unsafe code. Formal verification of core logic.", tagline: "Trust no tool", creator: "NEAR AI (Illia Polosukhin)", created_year: 2024, github_stars: 1420, maturity: "beta", last_commit_date: "2026-02-11", min_ram_mb: 512, min_cpu_cores: 2, min_storage_mb: 500, language: "Rust", codebase_size_lines: 15000, license: "Apache-2.0", features: JSON.stringify(["WASM sandboxing", "Rust memory safety", "Private key protection", "Capability-based permissions"]) },
     { slug: "moltworker", name: "Moltworker", github_url: "https://github.com/cloudflare/moltworker", description: "Cloudflare's serverless adaptation of OpenClaw. Runs on Cloudflare Workers with persistent state and sandboxed execution. No local hardware needed. Pay-per-request pricing. Global edge deployment in 300+ cities.", tagline: "OpenClaw at the edge", creator: "Cloudflare Labs", created_year: 2025, github_stars: 4100, maturity: "stable", last_commit_date: "2026-02-13", min_ram_mb: 0, min_cpu_cores: 0, min_storage_mb: 0, language: "JavaScript", codebase_size_lines: 8000, license: "Apache-2.0", features: JSON.stringify(["Serverless", "Cloudflare Workers", "Sandboxed execution", "Persistent state", "Global edge deployment"]) },
-    { slug: "swiftclaw", name: "SwiftClaw", github_url: "https://github.com/nicholasgasior/swiftclaw", description: "Native iOS/macOS OpenClaw client written in Swift. Runs as a background process on Apple devices. Deep integration with Shortcuts, Siri, and Apple Intelligence. Uses on-device Core ML for lightweight inference.", tagline: "OpenClaw, designed by Apple fans", creator: "Ravi Patel", created_year: 2025, github_stars: 2900, maturity: "beta", last_commit_date: "2026-02-06", min_ram_mb: 512, min_cpu_cores: 2, min_storage_mb: 200, language: "Swift", codebase_size_lines: 12000, license: "MIT", features: JSON.stringify(["Native iOS/macOS", "Siri integration", "Shortcuts automation", "Core ML inference", "iCloud sync", "Apple Watch companion"]) },
-    { slug: "clawlixir", name: "ClawLixir", github_url: "https://github.com/nicholasgasior/clawlixir", description: "Elixir/OTP implementation of OpenClaw built for massive concurrency. Each conversation is a supervised process. Hot code reloading. Handles 10,000+ concurrent users on a single node. Phoenix LiveView dashboard.", tagline: "Let it crash, let it claw", creator: "Kai Sasaki", created_year: 2024, github_stars: 3700, maturity: "stable", last_commit_date: "2026-02-09", min_ram_mb: 1024, min_cpu_cores: 2, min_storage_mb: 500, language: "Elixir", codebase_size_lines: 18000, license: "MIT", features: JSON.stringify(["OTP supervision trees", "Hot code reloading", "10K+ concurrent users", "Phoenix LiveView dashboard", "Distributed clustering", "Telegram + Discord + Slack"]) },
-    { slug: "clawpp", name: "Claw++", github_url: "https://github.com/nicholasgasior/clawpp", description: "High-performance C++ fork targeting embedded Linux and edge devices. Runs on OpenWrt routers, Raspberry Pi, and industrial SBCs. 100ms cold start. Static linking for zero-dependency deployment.", tagline: "Bare metal AI agent", creator: "EdgeAI Collective", created_year: 2025, github_stars: 1200, maturity: "alpha", last_commit_date: "2026-01-20", min_ram_mb: 64, min_cpu_cores: 1, min_storage_mb: 30, language: "C++", codebase_size_lines: 9000, license: "GPL-3.0", features: JSON.stringify(["Embedded Linux", "OpenWrt support", "100ms cold start", "Static binary", "MQTT integration", "GPIO via sysfs"]) },
+    { slug: "zeroclaw", name: "ZeroClaw", github_url: "https://github.com/theonlyhennygod/zeroclaw", description: "Zero overhead. Zero compromise. 100% Rust. 100% Agnostic. 3.4MB binary, <10ms startup, <5MB RAM. 22+ provider support. Pluggable everything via Rust traits. Runs on $10 hardware — 99% less memory than OpenClaw.", tagline: "Claw done right", creator: "theonlyhennygod", created_year: 2026, github_stars: 3608, maturity: "beta", last_commit_date: "2026-02-14", min_ram_mb: 5, min_cpu_cores: 1, min_storage_mb: 10, language: "Rust", codebase_size_lines: null, license: "MIT", features: JSON.stringify(["<5MB RAM", "<10ms startup", "22+ providers", "Rust traits architecture", "Sandboxing", "Multi-provider", "RISC-V support", "Pluggable everything"]) },
   ];
 
   const forkInsert = db().transaction(() => {
@@ -232,7 +230,6 @@ export function seedDatabase() {
     { device_id: did("banana-pi-bpi-m7"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "16GB RAM and RK3588. NVMe support helps with swap under load. Handles multiple messaging channels comfortably.", cold_start_sec: 8, warm_response_sec: 1.8 },
     { device_id: did("banana-pi-bpi-m7"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Container isolation with 16GB is smooth. Multiple groups run concurrently.", cold_start_sec: 5, warm_response_sec: 1 },
     { device_id: did("banana-pi-bpi-m7"), fork_id: fid("ironclaw"), verdict: "RUNS_OK", notes: "WASM sandbox works on ARM64. Some overhead but functional.", cold_start_sec: 10, warm_response_sec: 2 },
-    { device_id: did("banana-pi-bpi-m7"), fork_id: fid("clawlixir"), verdict: "RUNS_OK", notes: "Elixir BEAM VM runs fine on ARM. 16GB handles hundreds of concurrent users.", cold_start_sec: 8, warm_response_sec: 1.5 },
     // --- Pine64 ROCK64 (4GB) ---
     { device_id: did("pine64-rock64"), fork_id: fid("openclaw"), verdict: "BARELY_RUNS", notes: "4GB meets minimum but RK3328 is sluggish. Expect slow response times.", cold_start_sec: 25, warm_response_sec: 6 },
     { device_id: did("pine64-rock64"), fork_id: fid("nanoclaw"), verdict: "RUNS_OK", notes: "Container overhead is noticeable but functional with 1-2 groups.", cold_start_sec: 15, warm_response_sec: 4 },
@@ -242,7 +239,6 @@ export function seedDatabase() {
     { device_id: did("beaglebone-black"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw runs great. PRU co-processors are a bonus for GPIO tasks.", cold_start_sec: 1, warm_response_sec: 1.5 },
     { device_id: did("beaglebone-black"), fork_id: fid("nanobot"), verdict: "BARELY_RUNS", notes: "512MB shared with OS. Nanobot works but OOM kills are common under load.", cold_start_sec: 20, warm_response_sec: 7 },
     { device_id: did("beaglebone-black"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "512MB is far below the 2GB minimum. Single-core A8 is too slow anyway.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("beaglebone-black"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary runs. 512MB is tight but C++ efficiency helps.", cold_start_sec: 0.5, warm_response_sec: 2 },
     // --- BeagleBone AI-64 (4GB) ---
     { device_id: did("beaglebone-ai-64"), fork_id: fid("openclaw"), verdict: "BARELY_RUNS", notes: "4GB meets minimum but TDA4VM is quirky. Community support for AI workloads is limited.", cold_start_sec: 22, warm_response_sec: 5 },
     { device_id: did("beaglebone-ai-64"), fork_id: fid("nanoclaw"), verdict: "RUNS_OK", notes: "Docker works but the TI BSP can be finicky. 4GB is adequate.", cold_start_sec: 14, warm_response_sec: 3.5 },
@@ -281,7 +277,6 @@ export function seedDatabase() {
     { device_id: did("raspberry-pi-3b-plus"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw's Go binary runs great. 1GB is plenty for it.", cold_start_sec: 1, warm_response_sec: 1.5 },
     { device_id: did("raspberry-pi-3b-plus"), fork_id: fid("nanobot"), verdict: "BARELY_RUNS", notes: "1GB minus OS leaves maybe 600MB for Nanobot. Works but fragile.", cold_start_sec: 18, warm_response_sec: 6 },
     { device_id: did("raspberry-pi-3b-plus"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "1GB is half the minimum. OOM on startup.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("raspberry-pi-3b-plus"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary fits. 1GB is enough for C++ efficiency.", cold_start_sec: 0.3, warm_response_sec: 2 },
     // --- Raspberry Pi 400 (4GB) ---
     { device_id: did("raspberry-pi-400"), fork_id: fid("openclaw"), verdict: "BARELY_RUNS", notes: "Same as Pi 4 (4GB). Tight but functional. Keyboard form factor is charming.", cold_start_sec: 20, warm_response_sec: 5 },
     { device_id: did("raspberry-pi-400"), fork_id: fid("nanoclaw"), verdict: "RUNS_OK", notes: "Container isolation works with 1-2 conversations.", cold_start_sec: 12, warm_response_sec: 3 },
@@ -291,7 +286,6 @@ export function seedDatabase() {
     { device_id: did("pine-a64-plus"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "2GB matches minimum on paper but A64 is too slow. OOM under any real load.", cold_start_sec: null, warm_response_sec: null },
     { device_id: did("pine-a64-plus"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw runs perfectly. Great budget option.", cold_start_sec: 1, warm_response_sec: 1 },
     { device_id: did("pine-a64-plus"), fork_id: fid("nanobot"), verdict: "RUNS_OK", notes: "Nanobot fits in 256MB. 2GB total leaves room for the OS.", cold_start_sec: 8, warm_response_sec: 3 },
-    { device_id: did("pine-a64-plus"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary works. Slow CPU but functional.", cold_start_sec: 0.5, warm_response_sec: 2.5 },
     // --- PINE64 Star64 (8GB RISC-V) ---
     { device_id: did("pine64-star64"), fork_id: fid("openclaw"), verdict: "RUNS_OK", notes: "8GB is enough. RISC-V Node.js is slower than ARM but works. Expect 2x latency vs Pi 5.", cold_start_sec: 18, warm_response_sec: 4 },
     { device_id: did("pine64-star64"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw's Go binary is native RISC-V. Boots in under a second.", cold_start_sec: 1, warm_response_sec: 0.8 },
@@ -306,7 +300,6 @@ export function seedDatabase() {
     { device_id: did("minisforum-um780-xtx"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "32GB and Zen 4. Handles multiple agents and services concurrently. Best value mini PC for a dedicated AI host.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("minisforum-um780-xtx"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Can run dozens of isolated containers concurrently.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("minisforum-um780-xtx"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox overhead is negligible. Zen 4 tears through it.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("minisforum-um780-xtx"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "BEAM VM loves multiple cores. Handles thousands of concurrent connections.", cold_start_sec: 4, warm_response_sec: 0.3 },
     // --- GMKtec NucBox K8 (16GB, i5-12450H) ---
     { device_id: did("gmktec-nucbox-k8"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "12th-gen i5 with 16GB is more than enough. Good always-on server.", cold_start_sec: 4, warm_response_sec: 0.6 },
     { device_id: did("gmktec-nucbox-k8"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker on x86 is the best path. 16GB handles multiple containers.", cold_start_sec: 3, warm_response_sec: 0.4 },
@@ -314,13 +307,11 @@ export function seedDatabase() {
     // --- Beelink Mini S12 Pro (16GB, N100) ---
     { device_id: did("beelink-mini-s12-pro"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "N100 is surprisingly capable. 16GB and low power make it the best value always-on OpenClaw box.", cold_start_sec: 6, warm_response_sec: 1 },
     { device_id: did("beelink-mini-s12-pro"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker runs great. 16GB at 15W is the sweet spot for home servers.", cold_start_sec: 4, warm_response_sec: 0.6 },
-    { device_id: did("beelink-mini-s12-pro"), fork_id: fid("clawlixir"), verdict: "RUNS_OK", notes: "Only 4 E-cores limits concurrency vs P-core chips. Handles hundreds of users though.", cold_start_sec: 6, warm_response_sec: 1.2 },
     { device_id: did("beelink-mini-s12-pro"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM runs fine on x86. Low-power champion.", cold_start_sec: 5, warm_response_sec: 0.8 },
     // --- Geekom Mini IT12 (32GB, i7-12650H) ---
     { device_id: did("geekom-mini-it12"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "10-core i7 and 32GB. Multiple agents and services concurrently. Fast NVMe keeps things responsive under load.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("geekom-mini-it12"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Can host many isolated containers simultaneously.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("geekom-mini-it12"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox barely adds overhead on this hardware.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("geekom-mini-it12"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "BEAM VM thrives on the 10 cores. Great for high-concurrency deployments.", cold_start_sec: 3, warm_response_sec: 0.3 },
     // --- ASUS PN53 (16GB, Ryzen 6800U) ---
     { device_id: did("asus-pn53"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Zen 3+ with 16GB handles OpenClaw comfortably. RDNA 2 iGPU is a bonus.", cold_start_sec: 4, warm_response_sec: 0.6 },
     { device_id: did("asus-pn53"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker isolation works great. Reliable ASUS hardware.", cold_start_sec: 3, warm_response_sec: 0.4 },
@@ -328,10 +319,8 @@ export function seedDatabase() {
     // --- Lenovo ThinkCentre M75q Tiny (16GB, Ryzen 5600GE) ---
     { device_id: did("lenovo-thinkcentre-m75q"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Ryzen 5600GE and 16GB is a solid combo. Enterprise reliability for always-on use.", cold_start_sec: 5, warm_response_sec: 0.7 },
     { device_id: did("lenovo-thinkcentre-m75q"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "ThinkCentre reliability with Docker. Great for production.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("lenovo-thinkcentre-m75q"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "6 Zen 3 cores handle ClawLixir's concurrency model well.", cold_start_sec: 4, warm_response_sec: 0.5 },
     // --- Mac Mini M1 used (8GB) ---
     { device_id: did("mac-mini-m1"), fork_id: fid("openclaw"), verdict: "RUNS_OK", notes: "M1 is still fast. 8GB unified memory is tight for local models but cloud APIs work great.", cold_start_sec: 5, warm_response_sec: 0.6 },
-    { device_id: did("mac-mini-m1"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "Native Swift on Apple Silicon. Core ML inference is fast. This is SwiftClaw's home.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("mac-mini-m1"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Apple Containers native. Best isolation on macOS.", cold_start_sec: 3, warm_response_sec: 0.5 },
     { device_id: did("mac-mini-m1"), fork_id: fid("ironclaw"), verdict: "RUNS_OK", notes: "WASM sandbox works on ARM64 macOS. Some overhead.", cold_start_sec: 5, warm_response_sec: 0.8 },
     // --- LattePanda Sigma (16GB, i5-1340P) ---
@@ -340,15 +329,12 @@ export function seedDatabase() {
     { device_id: did("lattepanda-sigma"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "x86 WASM performance is great.", cold_start_sec: 4, warm_response_sec: 0.5 },
     // --- Mac Studio M2 Max (32GB) ---
     { device_id: did("mac-studio-m2-max"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "32GB unified memory. M2 Max handles multiple concurrent agents and background services effortlessly.", cold_start_sec: 2, warm_response_sec: 0.2 },
-    { device_id: did("mac-studio-m2-max"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "Native Apple Silicon. SwiftClaw with Core ML runs flawlessly.", cold_start_sec: 1, warm_response_sec: 0.2 },
     { device_id: did("mac-studio-m2-max"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Apple Containers with 32GB. Run dozens of isolated groups.", cold_start_sec: 1, warm_response_sec: 0.2 },
     { device_id: did("mac-studio-m2-max"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox overhead is invisible on M2 Max.", cold_start_sec: 2, warm_response_sec: 0.3 },
-    { device_id: did("mac-studio-m2-max"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "BEAM VM on 12 cores handles massive concurrency.", cold_start_sec: 2, warm_response_sec: 0.2 },
     // --- Custom PC Ryzen 5600X + RTX 3060 (32GB) ---
     { device_id: did("custom-pc-5600x-3060"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "32GB RAM and fast CPU handle OpenClaw via cloud APIs excellently. RTX 3060 is unused by OpenClaw itself.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("custom-pc-5600x-3060"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker with GPU passthrough. Isolated containers with GPU acceleration.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("custom-pc-5600x-3060"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox is trivial on desktop x86 + GPU.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("custom-pc-5600x-3060"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "6 cores handle ClawLixir concurrency well. GPU is a bonus.", cold_start_sec: 3, warm_response_sec: 0.3 },
     // --- Custom PC i5-12400 Budget (16GB) ---
     { device_id: did("custom-pc-i5-12400"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "16GB and 6 P-cores. No dGPU means cloud-only models but everything else works great.", cold_start_sec: 4, warm_response_sec: 0.6 },
     { device_id: did("custom-pc-i5-12400"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker isolation works perfectly. Good budget server.", cold_start_sec: 3, warm_response_sec: 0.4 },
@@ -356,26 +342,20 @@ export function seedDatabase() {
     // --- Dell OptiPlex Micro 7010 (16GB, i5-13500T) ---
     { device_id: did("dell-optiplex-micro-7010"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "14-core i5-13500T in a tiny box. Silent, reliable, perfect for always-on deployment.", cold_start_sec: 4, warm_response_sec: 0.5 },
     { device_id: did("dell-optiplex-micro-7010"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Enterprise-grade Docker host. Dell reliability is a plus.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("dell-optiplex-micro-7010"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "14 cores are great for BEAM concurrency. Production-ready.", cold_start_sec: 3, warm_response_sec: 0.3 },
     // --- Mac Pro M2 Ultra (192GB) ---
     { device_id: did("mac-pro-m2-ultra"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "192GB unified memory. Can run dozens of concurrent OpenClaw agents without breaking a sweat. Way beyond what's needed.", cold_start_sec: 1, warm_response_sec: 0.3 },
-    { device_id: did("mac-pro-m2-ultra"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "Native Apple Silicon. SwiftClaw with Core ML. 32-core Neural Engine accelerates on-device inference.", cold_start_sec: 1, warm_response_sec: 0.2 },
     { device_id: did("mac-pro-m2-ultra"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "192GB supports dozens of isolated Apple Containers. Each gets dedicated memory.", cold_start_sec: 1, warm_response_sec: 0.2 },
-    { device_id: did("mac-pro-m2-ultra"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "24 P+E cores with 192GB. BEAM VM scales to thousands of concurrent connections.", cold_start_sec: 1, warm_response_sec: 0.2 },
     { device_id: did("mac-pro-m2-ultra"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox overhead is negligible with this much silicon.", cold_start_sec: 1, warm_response_sec: 0.2 },
     // --- HP Z2 Mini G9 (32GB, i7-12700) ---
     { device_id: did("hp-z2-mini-g9"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Workstation-class i7-12700 and 32GB. ISV-certified reliability for production.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("hp-z2-mini-g9"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Enterprise Docker host. 32GB handles many containers.", cold_start_sec: 2, warm_response_sec: 0.3 },
-    { device_id: did("hp-z2-mini-g9"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "12 cores and 32GB. ClawLixir handles thousands of concurrent users.", cold_start_sec: 3, warm_response_sec: 0.3 },
     { device_id: did("hp-z2-mini-g9"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox trivial on workstation hardware.", cold_start_sec: 3, warm_response_sec: 0.4 },
     // --- MacBook Air M2 (16GB) ---
     { device_id: did("macbook-air-m2"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Fanless M2 with 16GB. Silent always-on operation. Handles OpenClaw with all integrations enabled.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("macbook-air-m2"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "Native Apple Silicon. SwiftClaw with Shortcuts and Siri integration.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("macbook-air-m2"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Apple Containers native. Great portable setup.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("macbook-air-m2"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox barely adds overhead on M2.", cold_start_sec: 3, warm_response_sec: 0.5 },
     // --- MacBook Pro 14" M3 Pro (18GB) ---
     { device_id: did("macbook-pro-14-m3-pro"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "M3 Pro with 18GB. Battery lasts all day even with agents running. Fast SSD keeps background tasks responsive.", cold_start_sec: 2, warm_response_sec: 0.3 },
-    { device_id: did("macbook-pro-14-m3-pro"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "SwiftClaw on M3 Pro is the premium Apple experience.", cold_start_sec: 1, warm_response_sec: 0.2 },
     { device_id: did("macbook-pro-14-m3-pro"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Apple Containers with 18GB unified memory. Smooth.", cold_start_sec: 2, warm_response_sec: 0.2 },
     { device_id: did("macbook-pro-14-m3-pro"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox overhead invisible on M3 Pro.", cold_start_sec: 2, warm_response_sec: 0.3 },
     // --- ThinkPad X1 Carbon Gen 11 (16GB) ---
@@ -386,7 +366,6 @@ export function seedDatabase() {
     { device_id: did("dell-xps-15"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "32GB RAM and 14-core i7 handle OpenClaw and all background services. GPU unused by OpenClaw but nice for other workloads.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("dell-xps-15"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "GPU passthrough in Docker for accelerated inference.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("dell-xps-15"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox trivial with 32GB and 14 cores.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("dell-xps-15"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "14 cores handle BEAM concurrency well.", cold_start_sec: 3, warm_response_sec: 0.3 },
     // --- System76 Lemur Pro (16GB) ---
     { device_id: did("system76-lemur-pro"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Linux-first with 16GB. Pop!_OS and Coreboot make it the purist's OpenClaw laptop.", cold_start_sec: 4, warm_response_sec: 0.6 },
     { device_id: did("system76-lemur-pro"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker on Pop!_OS is well-supported. 16GB handles isolation well.", cold_start_sec: 3, warm_response_sec: 0.4 },
@@ -413,7 +392,6 @@ export function seedDatabase() {
     { device_id: did("cloud-vps-8gb"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "8GB cloud instance is the comfortable sweet spot. All cloud API features work flawlessly.", cold_start_sec: 6, warm_response_sec: 1.5 },
     { device_id: did("cloud-vps-8gb"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker isolation on 8GB VPS. Great for multi-group deployments.", cold_start_sec: 4, warm_response_sec: 1 },
     { device_id: did("cloud-vps-8gb"), fork_id: fid("ironclaw"), verdict: "RUNS_OK", notes: "WASM sandbox works. Cloud vCPU performance varies.", cold_start_sec: 8, warm_response_sec: 2 },
-    { device_id: did("cloud-vps-8gb"), fork_id: fid("clawlixir"), verdict: "RUNS_OK", notes: "BEAM VM on shared vCPUs is less ideal than dedicated cores but functional.", cold_start_sec: 6, warm_response_sec: 1.5 },
     // --- Cloud GPU T4 ---
     { device_id: did("cloud-gpu-t4"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "16GB RAM handles OpenClaw via cloud APIs. T4 GPU is unused by OpenClaw but available for other workloads.", cold_start_sec: 5, warm_response_sec: 1 },
     { device_id: did("cloud-gpu-t4"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "GPU Docker containers with T4. Good for isolated inference.", cold_start_sec: 4, warm_response_sec: 0.8 },
@@ -421,11 +399,9 @@ export function seedDatabase() {
     // --- Cloud GPU H100 ---
     { device_id: did("cloud-gpu-h100"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "128GB RAM and fast vCPUs. Enterprise-scale concurrent agent deployment. $2500/mo is steep for just OpenClaw.", cold_start_sec: 2, warm_response_sec: 0.2 },
     { device_id: did("cloud-gpu-h100"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "128GB RAM means hundreds of isolated containers. GPU inference per-container.", cold_start_sec: 1, warm_response_sec: 0.1 },
-    { device_id: did("cloud-gpu-h100"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "BEAM VM on 16-32 vCPUs. Handles tens of thousands of concurrent users.", cold_start_sec: 2, warm_response_sec: 0.1 },
     { device_id: did("cloud-gpu-h100"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox is invisible on H100-class hardware.", cold_start_sec: 2, warm_response_sec: 0.2 },
     // --- Lambda Cloud A100x8 ---
     { device_id: did("lambda-cloud-a100x8"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "512GB RAM and 96+ vCPUs. Research-grade cluster. Could host hundreds of concurrent OpenClaw agents.", cold_start_sec: 3, warm_response_sec: 0.3 },
-    { device_id: did("lambda-cloud-a100x8"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "96+ vCPUs and 512GB RAM. BEAM VM handles massive concurrent workloads.", cold_start_sec: 2, warm_response_sec: 0.2 },
     { device_id: did("lambda-cloud-a100x8"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "GPU slicing across 8 A100s enables many isolated containers with dedicated GPU fractions.", cold_start_sec: 2, warm_response_sec: 0.2 },
     // --- AWS Graviton3 ARM (4GB) ---
     { device_id: did("aws-graviton3-arm"), fork_id: fid("openclaw"), verdict: "RUNS_OK", notes: "Graviton3 ARM is fast but 4GB is tight. Functional for light usage.", cold_start_sec: 8, warm_response_sec: 2 },
@@ -433,7 +409,6 @@ export function seedDatabase() {
     { device_id: did("aws-graviton3-arm"), fork_id: fid("nanobot"), verdict: "RUNS_GREAT", notes: "Nanobot is ideal for cheap ARM cloud instances.", cold_start_sec: 3, warm_response_sec: 1 },
     { device_id: did("aws-graviton3-arm"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw Go binary is native ARM. Barely uses resources.", cold_start_sec: 1, warm_response_sec: 0.5 },
     // --- iPhone 15 Pro (8GB) ---
-    { device_id: did("iphone-15-pro"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "SwiftClaw's primary target. Siri Shortcuts, Core ML, background execution. The Apple AI agent dream.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("iphone-15-pro"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "No terminal access on stock iOS. SwiftClaw is the only option without jailbreaking.", cold_start_sec: null, warm_response_sec: null },
     { device_id: did("iphone-15-pro"), fork_id: fid("picoclaw"), verdict: "WONT_RUN", notes: "Can't run arbitrary binaries on iOS without jailbreak.", cold_start_sec: null, warm_response_sec: null },
     // --- Google Pixel 8 (8GB) ---
@@ -446,7 +421,6 @@ export function seedDatabase() {
     { device_id: did("oneplus-12"), fork_id: fid("picoclaw"), verdict: "RUNS_GREAT", notes: "PicoClaw barely uses any resources. Perfect for phones.", cold_start_sec: 1, warm_response_sec: 0.5 },
     { device_id: did("oneplus-12"), fork_id: fid("nanoclaw"), verdict: "RUNS_OK", notes: "proot containers in Termux. Works but less clean than real Docker.", cold_start_sec: 12, warm_response_sec: 3 },
     // --- iPad Pro M2 (8GB) ---
-    { device_id: did("ipad-pro-m2"), fork_id: fid("swiftclaw"), verdict: "RUNS_GREAT", notes: "SwiftClaw runs natively. M2 chip with Core ML. No terminal but native Swift apps are smooth.", cold_start_sec: 2, warm_response_sec: 0.3 },
     { device_id: did("ipad-pro-m2"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "iPadOS has no terminal access. Can't run Node.js without jailbreak.", cold_start_sec: null, warm_response_sec: null },
     // --- Google Pixel 4a used (6GB) ---
     { device_id: did("google-pixel-4a"), fork_id: fid("nanobot"), verdict: "RUNS_OK", notes: "Nanobot in Termux works. 6GB is adequate. Great $100 dedicated AI phone.", cold_start_sec: 8, warm_response_sec: 2.5 },
@@ -469,7 +443,6 @@ export function seedDatabase() {
     { device_id: did("gpd-win-4"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "32GB and Ryzen 6800U. Most RAM of any handheld. Runs multiple agents and services as a pocket server.", cold_start_sec: 4, warm_response_sec: 0.5 },
     { device_id: did("gpd-win-4"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "32GB handles many isolated containers.", cold_start_sec: 3, warm_response_sec: 0.4 },
     { device_id: did("gpd-win-4"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "Zen 3+ x86 runs WASM sandbox with ease.", cold_start_sec: 3, warm_response_sec: 0.5 },
-    { device_id: did("gpd-win-4"), fork_id: fid("clawlixir"), verdict: "RUNS_OK", notes: "BEAM VM works but 8 cores is the limit. Handles hundreds of concurrent users.", cold_start_sec: 4, warm_response_sec: 0.5 },
     // --- QNAP TS-464 (8GB, N5095) ---
     { device_id: did("qnap-ts-464"), fork_id: fid("openclaw"), verdict: "RUNS_OK", notes: "N5095 and 8GB in Docker alongside NAS duties. Works but competes for resources with QTS.", cold_start_sec: 10, warm_response_sec: 2.5 },
     { device_id: did("qnap-ts-464"), fork_id: fid("nanoclaw"), verdict: "RUNS_OK", notes: "Docker isolation on QNAP works. 8GB is adequate.", cold_start_sec: 8, warm_response_sec: 2 },
@@ -478,7 +451,6 @@ export function seedDatabase() {
     // --- TrueNAS Mini R (32GB, Xeon D) ---
     { device_id: did("truenas-mini-r"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Xeon D and 32GB ECC. Run OpenClaw in a jail or VM alongside ZFS. Enterprise reliability.", cold_start_sec: 5, warm_response_sec: 1 },
     { device_id: did("truenas-mini-r"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker/jail isolation with 32GB. Plenty of room alongside NAS duties.", cold_start_sec: 4, warm_response_sec: 0.8 },
-    { device_id: did("truenas-mini-r"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "4-core Xeon D handles ClawLixir concurrency. 32GB ECC is rock-solid.", cold_start_sec: 5, warm_response_sec: 0.8 },
     { device_id: did("truenas-mini-r"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox on Xeon D. Server-grade security.", cold_start_sec: 5, warm_response_sec: 1 },
     // --- Synology DS923+ (4GB, Ryzen R1600) ---
     { device_id: did("synology-ds923-plus"), fork_id: fid("openclaw"), verdict: "BARELY_RUNS", notes: "4GB with DSM overhead leaves maybe 2.5GB for Docker. Tight but starts. Upgrade RAM first.", cold_start_sec: 30, warm_response_sec: 6 },
@@ -515,16 +487,13 @@ export function seedDatabase() {
     // --- Dell PowerEdge T360 (32GB, Xeon E-2434) ---
     { device_id: did("dell-poweredge-t360"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "Xeon E and 32GB ECC. Built for 24/7 operation. Production-grade OpenClaw deployment.", cold_start_sec: 4, warm_response_sec: 0.5 },
     { device_id: did("dell-poweredge-t360"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker on server hardware. ECC RAM adds reliability.", cold_start_sec: 3, warm_response_sec: 0.4 },
-    { device_id: did("dell-poweredge-t360"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "Server-grade for ClawLixir. Handles thousands of concurrent users reliably.", cold_start_sec: 4, warm_response_sec: 0.4 },
     { device_id: did("dell-poweredge-t360"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox on Xeon. Enterprise security on enterprise hardware.", cold_start_sec: 4, warm_response_sec: 0.5 },
     // --- HP ProLiant DL380 Gen10 (64GB, Xeon 4214) ---
     { device_id: did("hp-proliant-dl380-gen10"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "12-core Xeon and 64GB. Data center grade. Runs multiple OpenClaw instances concurrently.", cold_start_sec: 3, warm_response_sec: 0.3 },
-    { device_id: did("hp-proliant-dl380-gen10"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "BEAM VM on 12 Xeon cores with 64GB. Handles tens of thousands of concurrent connections.", cold_start_sec: 3, warm_response_sec: 0.2 },
     { device_id: did("hp-proliant-dl380-gen10"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "64GB supports many isolated Docker containers. Enterprise-grade.", cold_start_sec: 2, warm_response_sec: 0.2 },
     { device_id: did("hp-proliant-dl380-gen10"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox on server Xeon. Maximum security on maximum hardware.", cold_start_sec: 3, warm_response_sec: 0.3 },
     // --- Supermicro Mini-ITX Xeon D (64GB) ---
     { device_id: did("supermicro-mini-itx"), fork_id: fid("openclaw"), verdict: "RUNS_GREAT", notes: "8-core Xeon D and 64GB ECC in Mini-ITX. Low power server. Perfect homelab AI host.", cold_start_sec: 4, warm_response_sec: 0.4 },
-    { device_id: did("supermicro-mini-itx"), fork_id: fid("clawlixir"), verdict: "RUNS_GREAT", notes: "Xeon D loves BEAM concurrency. 64GB handles massive workloads.", cold_start_sec: 4, warm_response_sec: 0.3 },
     { device_id: did("supermicro-mini-itx"), fork_id: fid("nanoclaw"), verdict: "RUNS_GREAT", notes: "Docker on Xeon D. 64GB ECC for reliable containerized deployments.", cold_start_sec: 3, warm_response_sec: 0.3 },
     { device_id: did("supermicro-mini-itx"), fork_id: fid("ironclaw"), verdict: "RUNS_GREAT", notes: "WASM sandbox on embedded Xeon. Great power-to-performance ratio.", cold_start_sec: 4, warm_response_sec: 0.4 },
     // --- Dell OptiPlex 7050 refurb (8GB, i5-7500) ---
@@ -533,34 +502,11 @@ export function seedDatabase() {
     { device_id: did("dell-optiplex-7050-refurb"), fork_id: fid("nanobot"), verdict: "RUNS_GREAT", notes: "Nanobot barely uses any resources. Great budget server.", cold_start_sec: 3, warm_response_sec: 1 },
     { device_id: did("dell-optiplex-7050-refurb"), fork_id: fid("ironclaw"), verdict: "RUNS_OK", notes: "WASM sandbox works on Kaby Lake. 8GB is sufficient.", cold_start_sec: 7, warm_response_sec: 1.5 },
     // --- GL.iNet Beryl AX (512MB, MT7981B) ---
-    { device_id: did("gl-inet-beryl-ax"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary runs on OpenWrt. 512MB is tight alongside routing but works.", cold_start_sec: 0.5, warm_response_sec: 2.5 },
     { device_id: did("gl-inet-beryl-ax"), fork_id: fid("picoclaw"), verdict: "RUNS_OK", notes: "PicoClaw Go binary on OpenWrt. Fits but monitor memory alongside WiFi.", cold_start_sec: 1, warm_response_sec: 2 },
     { device_id: did("gl-inet-beryl-ax"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "512MB OpenWrt router. Not even close for OpenClaw.", cold_start_sec: null, warm_response_sec: null },
     // --- Ubiquiti Dream Machine (2GB, APQ8053) ---
     { device_id: did("ubiquiti-dream-machine"), fork_id: fid("picoclaw"), verdict: "RUNS_OK", notes: "PicoClaw could run alongside UniFi but Ubiquiti locks down their OS. Requires hacks.", cold_start_sec: 2, warm_response_sec: 2 },
-    { device_id: did("ubiquiti-dream-machine"), fork_id: fid("clawpp"), verdict: "BARELY_RUNS", notes: "Claw++ binary might run but UniFi OS doesn't officially support custom binaries. Risky.", cold_start_sec: 1, warm_response_sec: 3 },
     { device_id: did("ubiquiti-dream-machine"), fork_id: fid("openclaw"), verdict: "WONT_RUN", notes: "2GB minus UniFi overhead. Locked-down OS. Not practical.", cold_start_sec: null, warm_response_sec: null },
-    // --- Additional clawpp verdicts for embedded Linux devices ---
-    { device_id: did("lattepanda-3-delta"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ on x86 embedded Linux with 8GB. Static binary deploys in seconds. 100ms cold start.", cold_start_sec: 0.1, warm_response_sec: 0.5 },
-    { device_id: did("home-assistant-yellow"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary on CM4 alongside Home Assistant. 64MB minimum easily met. Low overhead.", cold_start_sec: 0.2, warm_response_sec: 1.5 },
-    { device_id: did("home-assistant-green"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ needs only 64MB of the 1GB. Fits alongside HA better than Python or Node.js forks.", cold_start_sec: 0.3, warm_response_sec: 2 },
-    { device_id: did("umbrel-home"), fork_id: fid("clawpp"), verdict: "RUNS_OK", notes: "Claw++ static binary on CM4. 64MB footprint leaves room for Umbrel services.", cold_start_sec: 0.2, warm_response_sec: 1.5 },
-    { device_id: did("raspberry-pi-400"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ on Pi 4 hardware. 4GB is 62x the 64MB minimum. Instant cold start.", cold_start_sec: 0.1, warm_response_sec: 0.8 },
-    { device_id: did("pinebook-pro"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ static binary on RK3399 embedded Linux. 4GB is plenty. Fast startup despite slow eMMC.", cold_start_sec: 0.1, warm_response_sec: 0.8 },
-    { device_id: did("raspberry-pi-zero-2-w"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ is perfect for the Zero 2W. 512MB is 8x the minimum. C++ efficiency shines here.", cold_start_sec: 0.2, warm_response_sec: 1.5 },
-    { device_id: did("coral-dev-board"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ on i.MX8M embedded Linux. 4GB is 62x minimum. MQTT integration pairs well with TPU tasks.", cold_start_sec: 0.1, warm_response_sec: 0.8 },
-    { device_id: did("odroid-n2-plus"), fork_id: fid("clawpp"), verdict: "RUNS_GREAT", notes: "Claw++ on Amlogic embedded Linux. 4GB and mainline kernel support make it rock-solid.", cold_start_sec: 0.1, warm_response_sec: 0.6 },
-    // --- Additional swiftclaw WONT_RUN verdicts for prominent non-Apple devices ---
-    { device_id: did("minisforum-um780-xtx"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. This runs Windows or Linux.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("steam-deck-oled"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Steam Deck runs SteamOS (Linux).", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("rog-ally"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. ROG Ally runs Windows.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("google-pixel-8"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Android is not supported.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("samsung-galaxy-tab-s9"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. This is an Android tablet.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("oneplus-12"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Android is not supported.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("dell-xps-15"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Dell XPS runs Windows or Linux.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("thinkpad-x1-carbon-gen11"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. ThinkPad runs Windows or Linux.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("custom-pc-5600x-3060"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Custom PCs run Windows or Linux.", cold_start_sec: null, warm_response_sec: null },
-    { device_id: did("google-pixel-4a"), fork_id: fid("swiftclaw"), verdict: "WONT_RUN", notes: "SwiftClaw requires iOS/macOS. Android is not supported.", cold_start_sec: null, warm_response_sec: null },
   ];
 
   const verdictInsert = db().transaction(() => {

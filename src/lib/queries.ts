@@ -556,6 +556,92 @@ export function getLatestBenchmarkForDeviceFork(deviceId: number, forkId: number
   `).get(deviceId, forkId) as BenchmarkSummary | undefined;
 }
 
+export type BenchmarkLeaderboardEntry = {
+  device_slug: string;
+  device_name: string;
+  device_category: string;
+  fork_slug: string;
+  fork_name: string;
+  fork_language: string;
+  overall_score: number;
+  cold_start_ms: number | null;
+  peak_memory_mb: number | null;
+  capabilities_passed: number;
+  capabilities_total: number;
+  disk_mb: number | null;
+};
+
+export function getBenchmarkLeaderboard(filters?: {
+  forkSlug?: string;
+  category?: string;
+  limit?: number;
+}): BenchmarkLeaderboardEntry[] {
+  ensureDb();
+  let where = "WHERE br.status = 'completed'";
+  const params: Record<string, unknown> = {};
+  if (filters?.forkSlug) { where += " AND f.slug = @forkSlug"; params.forkSlug = filters.forkSlug; }
+  if (filters?.category) { where += " AND d.category = @category"; params.category = filters.category; }
+  params.limit = filters?.limit ?? 100;
+
+  return db().prepare(`
+    SELECT
+      d.slug as device_slug, d.name as device_name, d.category as device_category,
+      f.slug as fork_slug, f.name as fork_name, f.language as fork_language,
+      (SELECT bres.value FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.metric = 'overall_score' LIMIT 1) as overall_score,
+      (SELECT bres.value FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.metric = 'cold_start' LIMIT 1) as cold_start_ms,
+      (SELECT bres.value FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.metric = 'peak_memory' LIMIT 1) as peak_memory_mb,
+      (SELECT COUNT(*) FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.category = 'capability' AND bres.value = 1) as capabilities_passed,
+      (SELECT COUNT(*) FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.category = 'capability') as capabilities_total,
+      (SELECT bres.value FROM benchmark_results bres WHERE bres.run_id = br.id AND bres.metric = 'disk_usage' LIMIT 1) as disk_mb
+    FROM benchmark_runs br
+    JOIN forks f ON f.id = br.fork_id
+    JOIN devices d ON d.id = br.device_id
+    ${where}
+    ORDER BY overall_score DESC, cold_start_ms ASC
+    LIMIT @limit
+  `).all(params) as BenchmarkLeaderboardEntry[];
+}
+
+export type BenchmarkForkSummary = {
+  fork_slug: string;
+  fork_name: string;
+  fork_language: string;
+  total_runs: number;
+  avg_score: number;
+  min_score: number;
+  max_score: number;
+  avg_cold_start_ms: number;
+  avg_memory_mb: number;
+  devices_tested: number;
+};
+
+export function getBenchmarkForkSummaries(): BenchmarkForkSummary[] {
+  ensureDb();
+  return db().prepare(`
+    SELECT
+      f.slug as fork_slug, f.name as fork_name, f.language as fork_language,
+      COUNT(DISTINCT br.id) as total_runs,
+      ROUND(AVG(score.value), 1) as avg_score,
+      MIN(score.value) as min_score,
+      MAX(score.value) as max_score,
+      ROUND(AVG(cs.value), 0) as avg_cold_start_ms,
+      ROUND(AVG(mem.value), 0) as avg_memory_mb,
+      COUNT(DISTINCT br.device_id) as devices_tested
+    FROM forks f
+    JOIN benchmark_runs br ON br.fork_id = f.id AND br.status = 'completed'
+    LEFT JOIN benchmark_results score ON score.run_id = br.id AND score.metric = 'overall_score'
+    LEFT JOIN benchmark_results cs ON cs.run_id = br.id AND cs.metric = 'cold_start'
+    LEFT JOIN benchmark_results mem ON mem.run_id = br.id AND mem.metric = 'peak_memory'
+    GROUP BY f.id
+    ORDER BY avg_score DESC
+  `).all() as BenchmarkForkSummary[];
+}
+
+export function getBenchmarkTotalRuns(): number {
+  ensureDb();
+  return (db().prepare("SELECT COUNT(*) as count FROM benchmark_runs WHERE status = 'completed'").get() as { count: number }).count;
+}
+
 export function getVerdictCountsByDevice(deviceId: number): Record<string, number> {
   ensureDb();
   const rows = db().prepare(`
