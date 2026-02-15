@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <main>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-ocean-900 via-ocean-700 to-ocean-400 py-28 sm:py-36">
+      <section className="relative overflow-hidden bg-gradient-to-b from-ocean-900 via-ocean-700 to-ocean-400 py-20 sm:py-36">
         {/* Deep water gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/30 via-transparent to-ocean-800/20" />
 
@@ -127,14 +127,14 @@ export default function Home() {
             <span>&#x1F980;</span>
             <span>Hardware compatibility for the AI agent era</span>
           </div>
-          <h1 className="font-heading text-5xl font-bold text-white sm:text-6xl lg:text-7xl drop-shadow-lg">
+          <h1 className="font-heading text-3xl font-bold text-white sm:text-5xl md:text-6xl lg:text-7xl drop-shadow-lg">
             Can it run{" "}
             <span className="bg-gradient-to-r from-ocean-300 via-ocean-200 to-white bg-clip-text text-transparent">
               OpenClaw
             </span>
             <span className="text-ocean-300">?</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-ocean-200 sm:text-xl">
+          <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base text-ocean-200 sm:text-xl">
             Find out if your hardware can handle the claw. Browse {allDevices.length}+ devices
             across {forks.length} OpenClaw forks — from $4 microcontrollers to cloud GPUs.
           </p>
@@ -165,36 +165,36 @@ export default function Home() {
 
       {/* Quick Stats */}
       <section className="relative -mt-6 z-20 mx-auto max-w-5xl px-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="rounded-xl bg-white p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-2xl font-bold text-ocean-800">{allDevices.length}</div>
-            <div className="text-xs text-navy-light mt-1">Devices Tested</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
+            <div className="text-xl sm:text-2xl font-bold text-ocean-800">{allDevices.length}</div>
+            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Devices Tested</div>
           </div>
-          <div className="rounded-xl bg-white p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-2xl font-bold text-ocean-800">{forks.length}</div>
-            <div className="text-xs text-navy-light mt-1">OpenClaw Forks</div>
+          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
+            <div className="text-xl sm:text-2xl font-bold text-ocean-800">{forks.length}</div>
+            <div className="text-[10px] sm:text-xs text-navy-light mt-1">OpenClaw Forks</div>
           </div>
-          <div className="rounded-xl bg-white p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-2xl font-bold text-verdict-great">$4</div>
-            <div className="text-xs text-navy-light mt-1">Cheapest Device</div>
+          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
+            <div className="text-xl sm:text-2xl font-bold text-verdict-great">$4</div>
+            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Cheapest Device</div>
           </div>
-          <div className="rounded-xl bg-white p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-2xl font-bold text-ocean-800">8MB</div>
-            <div className="text-xs text-navy-light mt-1">Min RAM (MimiClaw)</div>
+          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
+            <div className="text-xl sm:text-2xl font-bold text-ocean-800">8MB</div>
+            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Min RAM (MimiClaw)</div>
           </div>
         </div>
       </section>
 
       {/* Top Rated Devices */}
       <section className="mx-auto max-w-7xl px-4 py-16 pt-20">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-8">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-navy flex items-center gap-2">
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-navy flex items-center gap-2">
               <Trophy size={20} className="text-amber-500" /> Top Rated Devices
             </h2>
             <p className="mt-1 text-sm text-navy-light">Ranked by community ratings and compatibility verdicts</p>
           </div>
-          <Link href="/devices" className="rounded-lg bg-ocean-100 px-4 py-2 text-sm font-medium text-ocean-800 hover:bg-ocean-200 transition-colors">
+          <Link href="/devices" className="self-start sm:self-auto rounded-lg bg-ocean-100 px-4 py-2 text-sm font-medium text-ocean-800 hover:bg-ocean-200 transition-colors">
             View all &rarr;
           </Link>
         </div>
@@ -209,7 +209,7 @@ export default function Home() {
       <section className="bg-gradient-to-b from-white to-ocean-100/30 border-y border-ocean-200">
         <div className="mx-auto max-w-7xl px-4 py-16">
           <div className="mb-8">
-            <h2 className="font-heading text-2xl font-bold text-navy flex items-center gap-2">
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-navy flex items-center gap-2">
               <GitFork size={20} className="text-ocean-600" /> OpenClaw Forks
             </h2>
             <p className="mt-1 text-sm text-navy-light">From 8MB microcontrollers to serverless edge — there&apos;s a fork for every device</p>
@@ -264,7 +264,7 @@ export default function Home() {
       {/* CTA */}
       <section className="bg-gradient-to-r from-ocean-900 via-ocean-800 to-ocean-700 py-16">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h2 className="font-heading text-3xl font-bold text-white">
+          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white">
             Not sure which device to pick?
           </h2>
           <p className="mt-3 text-ocean-300 text-lg">

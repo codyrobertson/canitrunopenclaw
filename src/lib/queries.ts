@@ -601,3 +601,81 @@ export function logAffiliateClick(linkId: number, referrer: string | null): void
     "INSERT INTO affiliate_clicks (affiliate_link_id, referrer) VALUES (?, ?)"
   ).run(linkId, referrer);
 }
+
+// --- Fork Verification types and queries ---
+
+export type ForkVerification = {
+  id: number;
+  fork_id: number;
+  verified_at: string;
+  repo_accessible: number;
+  repo_stars: number | null;
+  detected_language: string | null;
+  detected_min_ram_mb: number | null;
+  detected_features: string | null;
+  readme_mentions: string | null;
+  discrepancies: string | null;
+  status: "pending" | "verified" | "discrepancy" | "inaccessible";
+};
+
+export type ForkVerificationWithName = ForkVerification & {
+  fork_name: string;
+  fork_slug: string;
+};
+
+export function getLatestForkVerification(forkId: number): ForkVerification | undefined {
+  ensureDb();
+  return db().prepare(`
+    SELECT * FROM fork_verifications
+    WHERE fork_id = ?
+    ORDER BY verified_at DESC
+    LIMIT 1
+  `).get(forkId) as ForkVerification | undefined;
+}
+
+export function getAllForkVerifications(): ForkVerificationWithName[] {
+  ensureDb();
+  return db().prepare(`
+    SELECT fv.*, f.name as fork_name, f.slug as fork_slug
+    FROM fork_verifications fv
+    JOIN forks f ON f.id = fv.fork_id
+    WHERE fv.id IN (
+      SELECT MAX(id) FROM fork_verifications GROUP BY fork_id
+    )
+    ORDER BY fv.verified_at DESC
+  `).all() as ForkVerificationWithName[];
+}
+
+export function insertForkVerification(
+  forkId: number,
+  data: {
+    repo_accessible: boolean;
+    repo_stars?: number | null;
+    detected_language?: string | null;
+    detected_min_ram_mb?: number | null;
+    detected_features?: string[] | null;
+    readme_mentions?: Record<string, string> | null;
+    discrepancies?: { field: string; stored: unknown; detected: unknown }[];
+    status: "pending" | "verified" | "discrepancy" | "inaccessible";
+  }
+): number {
+  ensureDb();
+  const result = db().prepare(`
+    INSERT INTO fork_verifications (
+      fork_id, repo_accessible, repo_stars, detected_language,
+      detected_min_ram_mb, detected_features, readme_mentions,
+      discrepancies, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    forkId,
+    data.repo_accessible ? 1 : 0,
+    data.repo_stars ?? null,
+    data.detected_language ?? null,
+    data.detected_min_ram_mb ?? null,
+    data.detected_features ? JSON.stringify(data.detected_features) : null,
+    data.readme_mentions ? JSON.stringify(data.readme_mentions) : null,
+    data.discrepancies ? JSON.stringify(data.discrepancies) : null,
+    data.status
+  );
+  return Number(result.lastInsertRowid);
+}

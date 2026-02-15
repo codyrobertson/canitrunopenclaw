@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, Star } from "lucide-react";
-import { getForkBySlug, getDevicesByFork } from "@/lib/queries";
+import { ExternalLink, Star, ShieldCheck } from "lucide-react";
+import { getForkBySlug, getDevicesByFork, getLatestForkVerification } from "@/lib/queries";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
 
@@ -52,6 +52,12 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
   const devices = getDevicesByFork(fork.id);
   const features = JSON.parse(fork.features) as string[];
   const maturity = maturityConfig[fork.maturity] ?? maturityConfig.beta;
+
+  // Check verification status
+  const verification = getLatestForkVerification(fork.id);
+  const isRecentlyVerified = verification
+    && verification.status === "verified"
+    && (Date.now() - new Date(verification.verified_at + "Z").getTime()) < 30 * 24 * 60 * 60 * 1000;
 
   const verdictCounts = {
     RUNS_GREAT: devices.filter(d => d.verdict === "RUNS_GREAT").length,
@@ -121,6 +127,12 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
               <span className={`text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded border ${maturity.color}`}>
                 {maturity.label}
               </span>
+              {isRecentlyVerified && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded" title={`Verified ${new Date(verification.verified_at + "Z").toLocaleDateString()}`}>
+                  <ShieldCheck size={12} />
+                  Verified
+                </span>
+              )}
             </div>
             {fork.tagline && <p className="text-ocean-600 italic mb-2">{fork.tagline}</p>}
             <p className="text-navy-light">{fork.description}</p>

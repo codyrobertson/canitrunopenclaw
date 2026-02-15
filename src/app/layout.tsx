@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description:
     "Find out if your hardware can run OpenClaw and its forks. Browse 90+ devices from $4 microcontrollers to cloud GPUs. Community-tested compatibility verdicts.",
   metadataBase: new URL("https://canitrunclaw.com"),
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
+  },
   openGraph: {
     type: "website",
     siteName: "Can it run OpenClaw?",

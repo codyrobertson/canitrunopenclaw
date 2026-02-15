@@ -8,6 +8,15 @@ import {
   getLatestBenchmarkForDeviceFork,
 } from "@/lib/queries";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 type BenchmarkPayload = {
   device_slug: string;
@@ -37,6 +46,16 @@ type BenchmarkPayload = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 requests per minute per IP
+    const ip = getClientIp(request);
+    const rl = rateLimit(`benchmarks-post:${ip}`, 10, 60_000);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     // Optional API key auth
     const apiKey = request.headers.get("x-clawbench-key");
     if (process.env.CLAWBENCH_API_KEY && apiKey !== process.env.CLAWBENCH_API_KEY) {
@@ -146,6 +165,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit: 60 requests per minute per IP
+    const ip = getClientIp(request);
+    const rl = rateLimit(`benchmarks-get:${ip}`, 60, 60_000);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const deviceSlug = searchParams.get("device");
     const forkSlug = searchParams.get("fork");

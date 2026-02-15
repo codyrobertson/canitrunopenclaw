@@ -45,10 +45,10 @@ export default function ForksPage() {
   const forks = getAllForks();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-navy">OpenClaw Forks</h1>
-        <p className="mt-2 text-navy-light max-w-2xl">
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy">OpenClaw Forks</h1>
+        <p className="mt-2 text-sm sm:text-base text-navy-light max-w-2xl">
           From the full 430K-line original to a 10MB Go binary for RISC-V boards.
           {forks.length} forks covering every platform from ESP32 microcontrollers to serverless edge.
         </p>
@@ -75,12 +75,12 @@ export default function ForksPage() {
         {forks.map((fork) => {
           const features = JSON.parse(fork.features) as string[];
           return (
-            <Link key={fork.id} href={`/forks/${fork.slug}`} className="group rounded-xl border border-ocean-200 bg-white p-6 hover:border-ocean-400 hover:shadow-md transition-all">
+            <Link key={fork.id} href={`/forks/${fork.slug}`} className="group rounded-xl border border-ocean-200 bg-white p-4 sm:p-6 hover:border-ocean-400 hover:shadow-md transition-all">
               {/* Header */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="font-heading text-xl font-semibold text-navy group-hover:text-ocean-800 transition-colors">{fork.name}</h2>
+              <div className="flex items-start justify-between gap-2 sm:gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h2 className="font-heading text-lg sm:text-xl font-semibold text-navy group-hover:text-ocean-800 transition-colors">{fork.name}</h2>
                     <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border ${maturityColors[fork.maturity] ?? maturityColors.beta}`}>
                       {fork.maturity}
                     </span>

@@ -135,3 +135,29 @@ CREATE TABLE IF NOT EXISTS benchmark_results (
   category TEXT NOT NULL CHECK(category IN ('latency', 'capability', 'resource')),
   details TEXT -- JSON with extra info
 );
+
+CREATE TABLE IF NOT EXISTS page_views (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  path TEXT NOT NULL,
+  referrer TEXT,
+  user_agent TEXT,
+  country TEXT,
+  viewed_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path);
+CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
+
+CREATE TABLE IF NOT EXISTS fork_verifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fork_id INTEGER NOT NULL REFERENCES forks(id),
+  verified_at TEXT NOT NULL DEFAULT (datetime('now')),
+  repo_accessible INTEGER DEFAULT 0,
+  repo_stars INTEGER,
+  detected_language TEXT,
+  detected_min_ram_mb INTEGER,
+  detected_features TEXT, -- JSON array
+  readme_mentions TEXT, -- JSON of extracted requirement mentions
+  discrepancies TEXT, -- JSON array of {field, stored, detected} objects
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'verified', 'discrepancy', 'inaccessible'))
+);
