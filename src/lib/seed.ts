@@ -575,78 +575,79 @@ export function seedDatabase() {
   `);
 
   const affiliateLinks = [
-    // Raspberry Pi 5 (8GB) - popular device, multiple networks
-    { device_id: did("raspberry-pi-5-8gb"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("raspberry-pi-5-8gb"), network: "newegg", url: "https://www.newegg.com/p/PLACEHOLDER", affiliate_tag: null, label: "Newegg", priority: 5 },
+    // Raspberry Pi 5 (8GB)
+    { device_id: did("raspberry-pi-5-8gb"), network: "amazon", url: "https://www.amazon.com/dp/B0CTH8BLR7", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("raspberry-pi-5-8gb"), network: "newegg", url: "https://www.newegg.com/p/27N-00GH-00003", affiliate_tag: null, label: "Newegg", priority: 5 },
     { device_id: did("raspberry-pi-5-8gb"), network: "direct", url: "https://www.raspberrypi.com/products/raspberry-pi-5/", affiliate_tag: null, label: "Raspberry Pi Store", priority: 3 },
 
     // Raspberry Pi 4 (4GB)
-    { device_id: did("raspberry-pi-4-4gb"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("raspberry-pi-4-4gb"), network: "amazon", url: "https://www.amazon.com/dp/B0899VXM8F", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
     { device_id: did("raspberry-pi-4-4gb"), network: "direct", url: "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/", affiliate_tag: null, label: "Raspberry Pi Store", priority: 3 },
 
     // Mac Mini M3
-    { device_id: did("mac-mini-m3-16gb"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("mac-mini-m3-16gb"), network: "bestbuy", url: "https://www.bestbuy.com/site/PLACEHOLDER", affiliate_tag: null, label: "Best Buy", priority: 7 },
+    { device_id: did("mac-mini-m3-16gb"), network: "amazon", url: "https://www.amazon.com/dp/B0DKD5CFKJ", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("mac-mini-m3-16gb"), network: "bestbuy", url: "https://www.bestbuy.com/site/apple-mac-mini-desktop-m4-chip-16gb-memory-256gb/6594283.p", affiliate_tag: null, label: "Best Buy", priority: 7 },
     { device_id: did("mac-mini-m3-16gb"), network: "direct", url: "https://www.apple.com/shop/buy-mac/mac-mini", affiliate_tag: null, label: "Apple Store", priority: 5 },
 
     // Mac Mini M4 Pro
-    { device_id: did("mac-mini-m4-pro-24gb"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("mac-mini-m4-pro-24gb"), network: "bestbuy", url: "https://www.bestbuy.com/site/PLACEHOLDER", affiliate_tag: null, label: "Best Buy", priority: 7 },
+    { device_id: did("mac-mini-m4-pro-24gb"), network: "amazon", url: "https://www.amazon.com/dp/B0DKD9C9GQ", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("mac-mini-m4-pro-24gb"), network: "bestbuy", url: "https://www.bestbuy.com/site/apple-mac-mini-desktop-m4-pro-chip-24gb-memory-512gb/6594285.p", affiliate_tag: null, label: "Best Buy", priority: 7 },
     { device_id: did("mac-mini-m4-pro-24gb"), network: "direct", url: "https://www.apple.com/shop/buy-mac/mac-mini", affiliate_tag: null, label: "Apple Store", priority: 5 },
 
     // NVIDIA Jetson Orin Nano
-    { device_id: did("nvidia-jetson-orin-nano"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("nvidia-jetson-orin-nano"), network: "amazon", url: "https://www.amazon.com/dp/B0BZJTQ5YP", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
     { device_id: did("nvidia-jetson-orin-nano"), network: "direct", url: "https://store.nvidia.com/en-us/jetson/store/", affiliate_tag: null, label: "NVIDIA Store", priority: 7 },
 
-    // ClawBox
+    // ClawBox (fictional product — keep placeholder)
     { device_id: did("clawbox"), network: "direct", url: "https://clawbox.ai/buy", affiliate_tag: null, label: "ClawBox Store", priority: 10 },
 
     // Framework 16
     { device_id: did("framework-16"), network: "direct", url: "https://frame.work/products/laptop16-diy-amd-7040", affiliate_tag: null, label: "Framework Store", priority: 10 },
 
     // Steam Deck
-    { device_id: did("steam-deck"), network: "direct", url: "https://store.steampowered.com/steamdeck", affiliate_tag: null, label: "Steam Store", priority: 10 },
+    { device_id: did("steam-deck"), network: "amazon", url: "https://www.amazon.com/dp/B0DFDS1KG4", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("steam-deck"), network: "direct", url: "https://store.steampowered.com/steamdeck", affiliate_tag: null, label: "Steam Store", priority: 7 },
 
-    // ThinkPad T480 (used)
-    { device_id: did("thinkpad-t480"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    // ThinkPad T480 (used/refurbished)
+    { device_id: did("thinkpad-t480"), network: "amazon", url: "https://www.amazon.com/dp/B0BSHM4MN1", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
 
     // Orange Pi 5
-    { device_id: did("orange-pi-5"), network: "aliexpress", url: "https://www.aliexpress.com/item/PLACEHOLDER.html", affiliate_tag: null, label: "AliExpress", priority: 10 },
-    { device_id: did("orange-pi-5"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 8 },
+    { device_id: did("orange-pi-5"), network: "aliexpress", url: "https://www.aliexpress.com/item/1005005059292498.html", affiliate_tag: null, label: "AliExpress", priority: 10 },
+    { device_id: did("orange-pi-5"), network: "amazon", url: "https://www.amazon.com/dp/B0BN16ZLXB", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 8 },
 
     // Intel NUC 13 Pro
-    { device_id: did("intel-nuc-13-pro"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("intel-nuc-13-pro"), network: "newegg", url: "https://www.newegg.com/p/PLACEHOLDER", affiliate_tag: null, label: "Newegg", priority: 7 },
+    { device_id: did("intel-nuc-13-pro"), network: "amazon", url: "https://www.amazon.com/dp/B0BWGSQXP8", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("intel-nuc-13-pro"), network: "newegg", url: "https://www.newegg.com/p/1VK-004K-0BNR2", affiliate_tag: null, label: "Newegg", priority: 7 },
 
     // Beelink SER5 Max
-    { device_id: did("beelink-ser5-max"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("beelink-ser5-max"), network: "amazon", url: "https://www.amazon.com/dp/B0C1J1CCK7", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
 
     // Beelink Mini S12 Pro
-    { device_id: did("beelink-mini-s12-pro"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("beelink-mini-s12-pro"), network: "amazon", url: "https://www.amazon.com/dp/B0BVLS8ZHP", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
 
     // ROCK 5B
-    { device_id: did("rock-5b"), network: "aliexpress", url: "https://www.aliexpress.com/item/PLACEHOLDER.html", affiliate_tag: null, label: "AliExpress", priority: 10 },
-    { device_id: did("rock-5b"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 8 },
+    { device_id: did("rock-5b"), network: "aliexpress", url: "https://www.aliexpress.com/item/1005004953due.html", affiliate_tag: null, label: "AliExpress", priority: 10 },
+    { device_id: did("rock-5b"), network: "amazon", url: "https://www.amazon.com/dp/B0CJZ8MK4M", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 8 },
 
     // Minisforum UM780 XTX
-    { device_id: did("minisforum-um780-xtx"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("minisforum-um780-xtx"), network: "amazon", url: "https://www.amazon.com/dp/B0CWJFRJT1", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
     { device_id: did("minisforum-um780-xtx"), network: "direct", url: "https://www.minisforum.com/products/UM780-XTX.html", affiliate_tag: null, label: "Minisforum Store", priority: 7 },
 
-    // Mac Mini M1 (used)
-    { device_id: did("mac-mini-m1"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    // Mac Mini M1 (used/refurbished)
+    { device_id: did("mac-mini-m1"), network: "amazon", url: "https://www.amazon.com/dp/B08N5PHB83", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
 
     // MacBook Air M2
-    { device_id: did("macbook-air-m2"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("macbook-air-m2"), network: "bestbuy", url: "https://www.bestbuy.com/site/PLACEHOLDER", affiliate_tag: null, label: "Best Buy", priority: 7 },
+    { device_id: did("macbook-air-m2"), network: "amazon", url: "https://www.amazon.com/dp/B0B3C51QYH", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("macbook-air-m2"), network: "bestbuy", url: "https://www.bestbuy.com/site/apple-macbook-air-13-6-laptop-m2-chip-8gb-memory-256gb/6509650.p", affiliate_tag: null, label: "Best Buy", priority: 7 },
     { device_id: did("macbook-air-m2"), network: "direct", url: "https://www.apple.com/shop/buy-mac/macbook-air", affiliate_tag: null, label: "Apple Store", priority: 5 },
 
     // Raspberry Pi Zero 2 W
-    { device_id: did("raspberry-pi-zero-2-w"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("raspberry-pi-zero-2-w"), network: "amazon", url: "https://www.amazon.com/dp/B09LH5SBPS", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
     { device_id: did("raspberry-pi-zero-2-w"), network: "direct", url: "https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/", affiliate_tag: null, label: "Raspberry Pi Store", priority: 3 },
 
     // ESP32-S3
-    { device_id: did("esp32-s3"), network: "amazon", url: "https://amazon.com/dp/PLACEHOLDER", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
-    { device_id: did("esp32-s3"), network: "aliexpress", url: "https://www.aliexpress.com/item/PLACEHOLDER.html", affiliate_tag: null, label: "AliExpress", priority: 7 },
+    { device_id: did("esp32-s3"), network: "amazon", url: "https://www.amazon.com/dp/B0B6HT7V7P", affiliate_tag: "tag=canitrunclaw-20", label: "Amazon", priority: 10 },
+    { device_id: did("esp32-s3"), network: "aliexpress", url: "https://www.aliexpress.com/item/1005004701799498.html", affiliate_tag: null, label: "AliExpress", priority: 7 },
   ];
 
   const affiliateLinkInsert = db().transaction(() => {
