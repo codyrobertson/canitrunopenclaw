@@ -60,15 +60,15 @@ for FORK_SLUG in $FORKS; do
     # Run the full simulation via run.sh
     OUTPUT=$("$SCRIPT_DIR/run.sh" "$DEV_SLUG" "$FORK_SLUG" 2>&1) || true
 
-    # Check outcome
-    if echo "$OUTPUT" | grep -q '"overall_score"'; then
-      SCORE=$(echo "$OUTPUT" | grep "Score:" | head -1 | awk '{print $2}' || echo "?")
+    # Check outcome — run.sh saves JSON to results file, check that
+    if [ -f "$RESULT_FILE" ]; then
+      SCORE=$(python3 -c "import json; print(json.load(open('$RESULT_FILE')).get('overall_score','?'))" 2>/dev/null || echo "?")
       echo "  [done] $DEV_SLUG  score=$SCORE"
       COMPLETED=$((COMPLETED + 1))
     elif echo "$OUTPUT" | grep -q '"insufficient_resources"'; then
       echo "  [fail] $DEV_SLUG  insufficient RAM"
       FAILED=$((FAILED + 1))
-    elif echo "$OUTPUT" | grep -q '"oom"'; then
+    elif echo "$OUTPUT" | grep -qi 'oom\|killed\|out of memory'; then
       echo "  [oom]  $DEV_SLUG"
       FAILED=$((FAILED + 1))
     elif echo "$OUTPUT" | grep -q '"not_applicable"'; then
@@ -76,6 +76,7 @@ for FORK_SLUG in $FORKS; do
       SKIPPED=$((SKIPPED + 1))
     else
       echo "  [err]  $DEV_SLUG"
+      echo "$OUTPUT" | tail -3
       FAILED=$((FAILED + 1))
     fi
   done
