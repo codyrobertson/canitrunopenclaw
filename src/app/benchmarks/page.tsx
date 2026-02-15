@@ -331,29 +331,121 @@ export default async function BenchmarksPage({
           </div>
         </section>
 
-        {/* Methodology note */}
-        <section className="mt-12 rounded-xl border border-ocean-200 bg-white p-6">
-          <h3 className="font-heading text-base font-bold text-navy mb-2 flex items-center gap-2">
-            <HardDrive size={16} className="text-ocean-600" /> About ClawBench
-          </h3>
-          <div className="text-sm text-navy-light space-y-2">
-            <p>
-              ClawBench runs each OpenClaw fork inside a Docker container constrained to match
-              the target device&apos;s CPU and memory profile. Scores are weighted: latency (30%),
-              capabilities (40%), and binary size (30%).
-            </p>
-            <p>
-              <strong>Score ranges:</strong>{" "}
-              <span className="text-verdict-great font-medium">85-100 Runs Great</span> |{" "}
-              <span className="text-blue-600 font-medium">60-84 Runs OK</span> |{" "}
-              <span className="text-amber-600 font-medium">30-59 Barely Runs</span> |{" "}
-              <span className="text-verdict-wont font-medium">0-29 Won&apos;t Run</span>
-            </p>
-            <p>
-              Capability tests check: messaging, browser automation, code execution,
-              persistent memory, file management, web search, MCP protocol, and tool use.
-            </p>
+        {/* How ClawBench Works */}
+        <section className="mt-12" id="how-it-works">
+          <h2 className="font-heading text-lg sm:text-xl font-bold text-navy mb-6 flex items-center gap-2">
+            <HardDrive size={18} className="text-ocean-600" /> How ClawBench Works
+          </h2>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            {[
+              {
+                step: "1",
+                title: "Containerize",
+                desc: "Each fork is cloned into a Docker container constrained to match the target device\u2019s CPU cores and RAM.",
+              },
+              {
+                step: "2",
+                title: "Build & Install",
+                desc: "Dependencies are installed using the fork\u2019s native toolchain \u2014 Go, Rust, Python, TypeScript, or C.",
+              },
+              {
+                step: "3",
+                title: "Probe & Measure",
+                desc: "Entry points are detected, cold start is timed, peak memory is tracked via cgroup, and disk usage is measured.",
+              },
+              {
+                step: "4",
+                title: "Score",
+                desc: "Results are combined into a 0\u2013100 score weighted across latency, capabilities, size, and build success.",
+              },
+            ].map((s) => (
+              <div
+                key={s.step}
+                className="rounded-xl border border-ocean-200 bg-white p-5"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ocean-800 text-xs font-bold text-white">
+                    {s.step}
+                  </span>
+                  <h3 className="font-heading font-semibold text-navy">{s.title}</h3>
+                </div>
+                <p className="text-sm text-navy-light leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
           </div>
+
+          {/* Scoring breakdown */}
+          <div className="rounded-xl border border-ocean-200 bg-white overflow-hidden">
+            <div className="border-b border-ocean-100 bg-ocean-50/50 px-5 py-3">
+              <h3 className="font-heading text-sm font-bold text-navy">Scoring Breakdown</h3>
+            </div>
+            <div className="p-5">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                {[
+                  { label: "Latency", weight: "30 pts", desc: "Cold start time (clone + install + startup). Under 5s = full marks." },
+                  { label: "Capabilities", weight: "40 pts", desc: "8 capability checks: messaging, browser, code exec, memory, files, search, MCP, tool use." },
+                  { label: "Size", weight: "20 pts", desc: "Total disk footprint after install. Under 20MB = full marks." },
+                  { label: "Build", weight: "10 pts", desc: "5 points for successful install, 5 for successful startup." },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-sm font-semibold text-navy">{s.label}</span>
+                      <span className="text-xs font-mono text-ocean-600">{s.weight}</span>
+                    </div>
+                    <p className="text-xs text-navy-light leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-ocean-100 text-sm">
+                <span className="font-medium text-navy">Score ranges:</span>
+                <span className="text-verdict-great font-medium">85-100 Runs Great</span>
+                <span className="text-navy-light">|</span>
+                <span className="text-blue-600 font-medium">60-84 Runs OK</span>
+                <span className="text-navy-light">|</span>
+                <span className="text-amber-600 font-medium">30-59 Barely Runs</span>
+                <span className="text-navy-light">|</span>
+                <span className="text-verdict-wont font-medium">0-29 Won&apos;t Run</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Capability tests */}
+          <div className="mt-4 rounded-xl border border-ocean-200 bg-white overflow-hidden">
+            <div className="border-b border-ocean-100 bg-ocean-50/50 px-5 py-3">
+              <h3 className="font-heading text-sm font-bold text-navy">8 Capability Tests</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-ocean-100">
+              {[
+                { name: "Messaging", desc: "WhatsApp, Telegram, Discord, Slack" },
+                { name: "Browser", desc: "Puppeteer, Playwright, Selenium" },
+                { name: "Code Exec", desc: "subprocess, child_process, spawn" },
+                { name: "Memory", desc: "SQLite, Redis, ChromaDB, RocksDB" },
+                { name: "Files", desc: "Read/write filesystem access" },
+                { name: "Web Search", desc: "Google, DuckDuckGo, Tavily, SERP" },
+                { name: "MCP", desc: "Model Context Protocol support" },
+                { name: "Tool Use", desc: "Function calling, tool definitions" },
+              ].map((cap) => (
+                <div key={cap.name} className="bg-white p-3">
+                  <div className="text-xs font-semibold text-navy">{cap.name}</div>
+                  <div className="text-[11px] text-navy-light mt-0.5">{cap.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Open source note */}
+          <p className="mt-4 text-xs text-navy-light">
+            ClawBench is fully open source.{" "}
+            <a
+              href="https://github.com/codyrobertson/canitrunopenclaw/tree/main/clawbench"
+              target="_blank"
+              rel="noopener"
+              className="text-ocean-600 hover:text-ocean-800 transition-colors font-medium"
+            >
+              View the benchmark source on GitHub &rarr;
+            </a>
+          </p>
         </section>
       </div>
     </main>

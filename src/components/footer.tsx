@@ -48,7 +48,7 @@ export async function Footer() {
             </p>
             <div className="mt-4 flex items-center gap-3">
               <a
-                href="https://github.com/openclaw/openclaw"
+                href="https://github.com/codyrobertson/canitrunopenclaw"
                 className="text-navy-light hover:text-ocean-800 transition-colors"
                 target="_blank"
                 rel="noopener"
