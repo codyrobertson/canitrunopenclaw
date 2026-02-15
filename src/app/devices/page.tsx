@@ -1,7 +1,40 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getDevicesRanked, getCategories, getAllForks } from "@/lib/queries";
 import { DeviceCard } from "@/components/device-card";
 import { SearchBar } from "@/components/search-bar";
 import Link from "next/link";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string; fork?: string; maxPrice?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const devices = getDevicesRanked({
+    search: params.q,
+    category: params.category,
+    forkSlug: params.fork,
+    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+  });
+
+  const titleParts: string[] = [];
+  if (params.category) titleParts.push(`${params.category} Devices`);
+  else titleParts.push("All Devices");
+  titleParts.push("for OpenClaw");
+
+  const title = titleParts.join(" ");
+  const description = `Browse ${devices.length} ${params.category ? params.category.toLowerCase() + " " : ""}devices compatible with OpenClaw and its forks. Community-tested hardware compatibility verdicts.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+  };
+}
 
 export default async function DevicesPage({
   searchParams,
@@ -25,7 +58,7 @@ export default async function DevicesPage({
         {/* Filters Sidebar */}
         <aside className="lg:w-64 shrink-0">
           <div className="rounded-xl border border-ocean-200 bg-white p-5 space-y-6 sticky top-24">
-            <div><SearchBar placeholder="Search..." /></div>
+            <div><Suspense fallback={<div className="h-[42px] rounded-xl bg-ocean-50 animate-pulse" />}><SearchBar placeholder="Search..." /></Suspense></div>
             <div>
               <h3 className="text-sm font-semibold text-navy mb-2">Category</h3>
               <div className="space-y-1">

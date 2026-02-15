@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { Github, LogOut } from "lucide-react";
 
 export async function Nav() {
   const session = await auth();
@@ -40,7 +41,8 @@ export async function Nav() {
                   "use server";
                   await signOut();
                 }}>
-                  <button className="text-sm text-ocean-800 hover:text-ocean-600 transition-colors">
+                  <button className="flex items-center gap-1 text-sm text-ocean-800 hover:text-ocean-600 transition-colors">
+                    <LogOut size={14} />
                     Sign out
                   </button>
                 </form>
@@ -50,7 +52,8 @@ export async function Nav() {
                 "use server";
                 await signIn("github");
               }}>
-                <button className="rounded-lg bg-ocean-800 px-4 py-2 text-sm font-medium text-white hover:bg-ocean-700 transition-colors">
+                <button className="flex items-center gap-2 rounded-lg bg-ocean-800 px-4 py-2 text-sm font-medium text-white hover:bg-ocean-700 transition-colors">
+                  <Github size={16} />
                   Sign in with GitHub
                 </button>
               </form>

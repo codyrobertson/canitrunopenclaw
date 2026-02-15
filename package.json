@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
+    "lucide-react": "^0.564.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
     "react": "19.2.3",

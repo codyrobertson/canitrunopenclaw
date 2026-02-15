@@ -1,6 +1,45 @@
+import type { Metadata } from "next";
 import { getDevicesRanked, getVerdictsByDevice } from "@/lib/queries";
 import { VerdictBadge } from "@/components/verdict-badge";
 import Link from "next/link";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ devices?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const selectedSlugs = params.devices?.split(",").filter(Boolean) ?? [];
+
+  if (selectedSlugs.length >= 2) {
+    const allDevices = getDevicesRanked();
+    const selectedDevices = selectedSlugs
+      .map((slug) => allDevices.find((d) => d.slug === slug))
+      .filter(Boolean) as typeof allDevices;
+
+    if (selectedDevices.length >= 2) {
+      const names = selectedDevices.map((d) => d.name);
+      const title = `Compare ${names.join(" vs ")}`;
+      const description = `Side-by-side comparison of ${names.join(", ")} for OpenClaw compatibility. Compare specs, performance, and fork verdicts.`;
+      return {
+        title,
+        description,
+        openGraph: { title, description },
+      };
+    }
+  }
+
+  return {
+    title: "Compare Devices",
+    description:
+      "Compare up to 3 devices side-by-side to find your perfect OpenClaw host. See specs, pricing, and fork compatibility verdicts.",
+    openGraph: {
+      title: "Compare Devices",
+      description:
+        "Compare up to 3 devices side-by-side to find your perfect OpenClaw host.",
+    },
+  };
+}
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Star } from "lucide-react";
 
 export function StarRating({
   rating,
@@ -26,14 +27,17 @@ export function StarRating({
             key={star}
             type="button"
             disabled={!interactive}
-            className={`text-lg transition-colors ${
+            className={`transition-colors ${
               interactive ? "cursor-pointer hover:scale-110" : "cursor-default"
-            } ${star <= displayRating ? "text-amber-400" : "text-gray-300"}`}
+            }`}
             onMouseEnter={() => interactive && setHovered(star)}
             onMouseLeave={() => interactive && setHovered(0)}
             onClick={() => interactive && onRate?.(star)}
           >
-            &#9733;
+            <Star
+              size={18}
+              className={star <= displayRating ? "text-amber-400 fill-amber-400" : "text-gray-300"}
+            />
           </button>
         ))}
       </div>

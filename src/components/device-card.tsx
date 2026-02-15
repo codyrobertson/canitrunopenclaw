@@ -2,6 +2,11 @@ import Link from "next/link";
 import type { DeviceWithScore } from "@/lib/queries";
 import { VerdictBadge } from "./verdict-badge";
 import { StarRating } from "./star-rating";
+import {
+  Cpu, Cloud, Monitor, Laptop, CircuitBoard, Smartphone,
+  HardDrive, Server, Gamepad2, Router, Home, Tablet,
+  Box, type LucideIcon,
+} from "lucide-react";
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;
@@ -14,6 +19,32 @@ function formatPrice(price: number | null, type: string): string {
   return type === "monthly" ? `$${price}/mo` : `$${price}`;
 }
 
+const categoryConfig: Record<string, { Icon: LucideIcon; color: string }> = {
+  SBC: { Icon: Cpu, color: "bg-emerald-100 text-emerald-700" },
+  Desktop: { Icon: Monitor, color: "bg-blue-100 text-blue-700" },
+  Laptop: { Icon: Laptop, color: "bg-purple-100 text-purple-700" },
+  Server: { Icon: Server, color: "bg-orange-100 text-orange-700" },
+  Cloud: { Icon: Cloud, color: "bg-sky-100 text-sky-700" },
+  Microcontroller: { Icon: CircuitBoard, color: "bg-amber-100 text-amber-700" },
+  Handheld: { Icon: Gamepad2, color: "bg-pink-100 text-pink-700" },
+  Appliance: { Icon: Home, color: "bg-teal-100 text-teal-700" },
+  NAS: { Icon: HardDrive, color: "bg-indigo-100 text-indigo-700" },
+  Phone: { Icon: Smartphone, color: "bg-rose-100 text-rose-700" },
+  Tablet: { Icon: Tablet, color: "bg-fuchsia-100 text-fuchsia-700" },
+  "Mini PC": { Icon: Box, color: "bg-cyan-100 text-cyan-700" },
+  Router: { Icon: Router, color: "bg-lime-100 text-lime-700" },
+};
+
+export function CategoryBadge({ category }: { category: string }) {
+  const config = categoryConfig[category] ?? { Icon: Cpu, color: "bg-gray-100 text-gray-700" };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.color}`}>
+      <config.Icon size={12} />
+      {category}
+    </span>
+  );
+}
+
 export function DeviceCard({ device }: { device: DeviceWithScore }) {
   return (
     <Link
@@ -23,9 +54,7 @@ export function DeviceCard({ device }: { device: DeviceWithScore }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-ocean-600 uppercase tracking-wider">
-              {device.category}
-            </span>
+            <CategoryBadge category={device.category} />
           </div>
           <h3 className="font-heading text-lg font-semibold text-navy group-hover:text-ocean-800 transition-colors truncate">
             {device.name}

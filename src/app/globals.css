@@ -10,6 +10,7 @@
   --color-ocean-300: #ADE8F4;
   --color-ocean-200: #CAF0F8;
   --color-ocean-100: #E8F8FD;
+  --color-ocean-50: #F0FBFF;
   --color-navy: #1B263B;
   --color-navy-light: #2D3A4F;
   --color-sand: #F8F9FA;
@@ -30,4 +31,33 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
+}
+
+/* Smooth wave animations */
+@keyframes sway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-2%); }
+}
+
+@keyframes sway-reverse {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(15px) rotate(5deg); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-drift {
+  animation: drift 6s ease-in-out infinite;
 }
