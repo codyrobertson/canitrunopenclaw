@@ -281,7 +281,7 @@ export default async function BenchmarksPage({
               <tbody>
                 {leaderboard.map((entry, i) => (
                   <tr
-                    key={`${entry.device_slug}-${entry.fork_slug}`}
+                    key={`${entry.device_slug}-${entry.fork_slug}-${i}`}
                     className="border-b border-ocean-50 hover:bg-ocean-50/30 transition-colors"
                   >
                     <td className="px-3 py-2.5 text-navy-light font-mono text-xs">
