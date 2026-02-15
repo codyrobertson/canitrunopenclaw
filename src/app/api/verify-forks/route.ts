@@ -123,7 +123,6 @@ async function verifyOneFork(fork: Fork): Promise<{
 
   const headers = getGitHubHeaders();
 
-  // Check repo existence
   try {
     const repoResp = await fetch(`https://api.github.com/repos/${ownerRepo}`, { headers });
     if (!repoResp.ok) return result;
@@ -137,8 +136,7 @@ async function verifyOneFork(fork: Fork): Promise<{
     result.repo_stars = repoData.stargazers_count;
     result.detected_language = repoData.language;
 
-    // Check star count discrepancy
-    if (fork.github_stars > 0 && result.repo_stars !== null) {
+    if (fork.github_stars && fork.github_stars > 0 && result.repo_stars !== null) {
       const drift = Math.abs(fork.github_stars - result.repo_stars) / fork.github_stars;
       if (drift > 0.2) {
         result.discrepancies.push({
@@ -149,7 +147,6 @@ async function verifyOneFork(fork: Fork): Promise<{
       }
     }
 
-    // Check language
     if (result.detected_language && fork.language && result.detected_language !== fork.language) {
       result.discrepancies.push({
         field: "language",
@@ -161,7 +158,6 @@ async function verifyOneFork(fork: Fork): Promise<{
     return result;
   }
 
-  // Read README
   try {
     const readmeResp = await fetch(`https://api.github.com/repos/${ownerRepo}/readme`, { headers });
     if (readmeResp.ok) {
@@ -203,7 +199,7 @@ export async function POST(request: NextRequest) {
     let forksToVerify: Fork[];
 
     if (body.fork_slug) {
-      const fork = getForkBySlug(body.fork_slug);
+      const fork = await getForkBySlug(body.fork_slug);
       if (!fork) {
         return NextResponse.json(
           { error: `Fork not found: ${body.fork_slug}` },
@@ -212,14 +208,14 @@ export async function POST(request: NextRequest) {
       }
       forksToVerify = [fork];
     } else {
-      forksToVerify = getAllForks();
+      forksToVerify = await getAllForks();
     }
 
     const results = [];
 
     for (const fork of forksToVerify) {
       const verification = await verifyOneFork(fork);
-      const verificationId = insertForkVerification(fork.id, {
+      const verificationId = await insertForkVerification(fork.id, {
         repo_accessible: verification.repo_accessible,
         repo_stars: verification.repo_stars,
         detected_language: verification.detected_language,
@@ -252,10 +248,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const verifications = getAllForkVerifications();
-    const forks = getAllForks();
+    const verifications = await getAllForkVerifications();
+    const forks = await getAllForks();
 
-    // Build a map of fork_id -> latest verification
     const verificationMap = new Map(
       verifications.map(v => [v.fork_id, v])
     );

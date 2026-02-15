@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDevicesRanked, getCategories, getAllForks } from "@/lib/queries";
+import { createFilterAwareMetadata } from "@/lib/seo/listings";
+import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { DeviceCard } from "@/components/device-card";
 import { SearchBar } from "@/components/search-bar";
 import { FilterToggle } from "@/components/filter-toggle";
+import { JsonLd } from "@/components/json-ld";
 import Link from "next/link";
 
 export async function generateMetadata({
@@ -12,7 +15,7 @@ export async function generateMetadata({
   searchParams: Promise<{ q?: string; category?: string; fork?: string; maxPrice?: string }>;
 }): Promise<Metadata> {
   const params = await searchParams;
-  const devices = getDevicesRanked({
+  const devices = await getDevicesRanked({
     search: params.q,
     category: params.category,
     forkSlug: params.fork,
@@ -27,14 +30,13 @@ export async function generateMetadata({
   const title = titleParts.join(" ");
   const description = `Browse ${devices.length} ${params.category ? params.category.toLowerCase() + " " : ""}devices compatible with OpenClaw and its forks. Community-tested hardware compatibility verdicts.`;
 
-  return {
+  const hasFilters = Boolean(params.q || params.category || params.fork || params.maxPrice);
+  return createFilterAwareMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-    },
-  };
+    basePath: "/devices",
+    hasFilters,
+  });
 }
 
 export default async function DevicesPage({
@@ -43,14 +45,23 @@ export default async function DevicesPage({
   searchParams: Promise<{ q?: string; category?: string; fork?: string; maxPrice?: string }>;
 }) {
   const params = await searchParams;
-  const devices = getDevicesRanked({
-    search: params.q,
-    category: params.category,
-    forkSlug: params.fork,
-    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-  });
-  const categories = getCategories();
-  const forks = getAllForks();
+  const [devices, categories, forks] = await Promise.all([
+    getDevicesRanked({
+      search: params.q,
+      category: params.category,
+      forkSlug: params.fork,
+      maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+    }),
+    getCategories(),
+    getAllForks(),
+  ]);
+
+  const jsonLd = buildSchemaGraph([
+    buildBreadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Devices", path: "/devices" },
+    ]),
+  ]);
 
   const filterContent = (
     <div className="space-y-6">
@@ -80,6 +91,7 @@ export default async function DevicesPage({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <JsonLd data={jsonLd} />
       <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy mb-4 sm:mb-6">All Devices</h1>
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Filters Sidebar - hidden on mobile behind toggle */}

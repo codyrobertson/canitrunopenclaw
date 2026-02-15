@@ -5,6 +5,7 @@ export type CreateMetadataArgs = {
   description: string;
   canonicalPath: string;
   indexable?: boolean;
+  follow?: boolean;
   openGraph?: NonNullable<Metadata["openGraph"]>;
   twitter?: NonNullable<Metadata["twitter"]>;
 };
@@ -18,18 +19,20 @@ function normalizeCanonicalPath(path: string): string {
 // For now: query-param pages canon to the clean path.
 export function buildCanonicalPath(
   path: string,
-  _searchParams?: Record<string, string | string[] | undefined | null>
+  searchParams?: Record<string, string | string[] | undefined | null>
 ): string {
+  void searchParams;
   return normalizeCanonicalPath(path);
 }
 
 export function createMetadata(args: CreateMetadataArgs): Metadata {
   const canonicalPath = normalizeCanonicalPath(args.canonicalPath);
   const indexable = args.indexable ?? true;
+  const follow = args.follow ?? true;
 
   const robots: Metadata["robots"] = indexable
-    ? { index: true, follow: true }
-    : { index: false, follow: true };
+    ? { index: true, follow }
+    : { index: false, follow };
 
   return {
     title: args.title,

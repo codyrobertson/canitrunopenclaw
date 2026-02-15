@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { cache } from "react";
 import { getAllForks } from "@/lib/queries";
+import { createMetadata } from "@/lib/seo/metadata";
+import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 
-export function generateMetadata(): Metadata {
-  const forks = getAllForks();
+const getCachedForks = cache(() => getAllForks());
+
+export async function generateMetadata(): Promise<Metadata> {
+  const forks = await getCachedForks();
   const title = `OpenClaw Forks - All ${forks.length} Forks Compared`;
   const description = `Compare all ${forks.length} OpenClaw forks. From lightweight microcontroller builds to full cloud deployments. Find the right fork for your hardware.`;
-  return {
+  return createMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-    },
-  };
+    canonicalPath: "/forks",
+  });
 }
 
 const maturityColors: Record<string, string> = {
@@ -41,11 +44,19 @@ function formatStars(stars: number): string {
   return String(stars);
 }
 
-export default function ForksPage() {
-  const forks = getAllForks();
+export default async function ForksPage() {
+  const forks = await getCachedForks();
+
+  const jsonLd = buildSchemaGraph([
+    buildBreadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Forks", path: "/forks" },
+    ]),
+  ]);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <JsonLd data={jsonLd} />
       <div className="mb-6 sm:mb-8">
         <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy">OpenClaw Forks</h1>
         <p className="mt-2 text-sm sm:text-base text-navy-light max-w-2xl">
@@ -73,7 +84,7 @@ export default function ForksPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {forks.map((fork) => {
-          const features = JSON.parse(fork.features) as string[];
+          const features = JSON.parse(fork.features ?? "[]") as string[];
           return (
             <Link key={fork.id} href={`/forks/${fork.slug}`} className="group rounded-xl border border-ocean-200 bg-white p-4 sm:p-6 hover:border-ocean-400 hover:shadow-md transition-all">
               {/* Header */}
@@ -81,8 +92,8 @@ export default function ForksPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h2 className="font-heading text-lg sm:text-xl font-semibold text-navy group-hover:text-ocean-800 transition-colors">{fork.name}</h2>
-                    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border ${maturityColors[fork.maturity] ?? maturityColors.beta}`}>
-                      {fork.maturity}
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border ${maturityColors[fork.maturity ?? "beta"] ?? maturityColors.beta}`}>
+                      {fork.maturity ?? "beta"}
                     </span>
                   </div>
                   {fork.tagline && <p className="text-xs text-ocean-600 italic">{fork.tagline}</p>}
@@ -101,7 +112,7 @@ export default function ForksPage() {
                   {fork.min_ram_mb === 0 ? "Serverless" : fork.min_ram_mb < 1024 ? `${fork.min_ram_mb}MB` : `${(fork.min_ram_mb / 1024).toFixed(0)}GB`} min RAM
                 </span>
                 <span className="text-xs rounded bg-ocean-50 border border-ocean-200 px-2 py-1">
-                  {fork.min_cpu_cores} CPU core{fork.min_cpu_cores > 1 ? "s" : ""}
+                  {fork.min_cpu_cores ?? 1} CPU core{(fork.min_cpu_cores ?? 1) > 1 ? "s" : ""}
                 </span>
                 {fork.codebase_size_lines && (
                   <span className="text-xs rounded bg-ocean-50 border border-ocean-200 px-2 py-1">
@@ -109,9 +120,9 @@ export default function ForksPage() {
                   </span>
                 )}
                 <span className="text-xs rounded bg-ocean-50 border border-ocean-200 px-2 py-1">{fork.license}</span>
-                {fork.github_stars > 0 && (
+                {(fork.github_stars ?? 0) > 0 && (
                   <span className="text-xs rounded bg-ocean-50 border border-ocean-200 px-2 py-1 flex items-center gap-1">
-                    <Star size={12} className="fill-amber-400 text-amber-400" /> {formatStars(fork.github_stars)}
+                    <Star size={12} className="fill-amber-400 text-amber-400" /> {formatStars(fork.github_stars ?? 0)}
                   </span>
                 )}
               </div>

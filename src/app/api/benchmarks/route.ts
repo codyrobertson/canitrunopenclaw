@@ -6,8 +6,9 @@ import {
   completeBenchmarkRun,
   insertBenchmarkResult,
   getLatestBenchmarkForDeviceFork,
+  updateVerdictTimings,
+  updateBenchmarkRunRawJson,
 } from "@/lib/queries";
-import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 
 function getClientIp(request: NextRequest): string {
@@ -46,7 +47,6 @@ type BenchmarkPayload = {
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit: 10 requests per minute per IP
     const ip = getClientIp(request);
     const rl = rateLimit(`benchmarks-post:${ip}`, 10, 60_000);
     if (!rl.success) {
@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optional API key auth
     const apiKey = request.headers.get("x-clawbench-key");
     if (process.env.CLAWBENCH_API_KEY && apiKey !== process.env.CLAWBENCH_API_KEY) {
       return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
@@ -71,18 +70,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const device = getDeviceBySlug(body.device_slug);
+    const device = await getDeviceBySlug(body.device_slug);
     if (!device) {
       return NextResponse.json({ error: `Device not found: ${body.device_slug}` }, { status: 404 });
     }
 
-    const fork = getForkBySlug(body.fork_slug);
+    const fork = await getForkBySlug(body.fork_slug);
     if (!fork) {
       return NextResponse.json({ error: `Fork not found: ${body.fork_slug}` }, { status: 404 });
     }
 
-    // Create the benchmark run
-    const runId = createBenchmarkRun(
+    const runId = await createBenchmarkRun(
       device.id,
       fork.id,
       null,
@@ -92,66 +90,50 @@ export async function POST(request: NextRequest) {
     );
 
     try {
-      // Insert latency results
       if (body.results.latency) {
         for (const [metric, value] of Object.entries(body.results.latency)) {
           if (value !== undefined && value !== null) {
-            insertBenchmarkResult(runId, metric === "cold_start_ms" ? "cold_start" : metric === "warm_response_ms" ? "warm_response" : metric, value, "ms", "latency");
+            await insertBenchmarkResult(runId, metric === "cold_start_ms" ? "cold_start" : metric === "warm_response_ms" ? "warm_response" : metric, value, "ms", "latency");
           }
         }
       }
 
-      // Insert capability results
       if (body.results.capabilities) {
         for (const [capability, passed] of Object.entries(body.results.capabilities)) {
-          insertBenchmarkResult(runId, capability, passed ? 1 : 0, "bool", "capability");
+          await insertBenchmarkResult(runId, capability, passed ? 1 : 0, "bool", "capability");
         }
       }
 
-      // Insert resource results
       if (body.results.resources) {
         for (const [metric, value] of Object.entries(body.results.resources)) {
           if (value !== undefined && value !== null) {
             const unit = metric.includes("memory") ? "MB" : metric.includes("cpu") ? "percent" : metric === "max_concurrent" ? "agents" : "unit";
-            insertBenchmarkResult(runId, metric === "peak_memory_mb" ? "peak_memory" : metric === "cpu_avg_percent" ? "cpu_avg" : metric, value, unit, "resource");
+            await insertBenchmarkResult(runId, metric === "peak_memory_mb" ? "peak_memory" : metric === "cpu_avg_percent" ? "cpu_avg" : metric, value, unit, "resource");
           }
         }
       }
 
-      // Insert overall score
       if (body.overall_score !== undefined) {
-        insertBenchmarkResult(runId, "overall_score", body.overall_score, "score", "resource");
+        await insertBenchmarkResult(runId, "overall_score", body.overall_score, "score", "resource");
       }
 
-      // Update compatibility_verdicts if cold_start or warm_response present
       const coldStart = body.results.latency?.cold_start_ms;
       const warmResponse = body.results.latency?.warm_response_ms;
       if (coldStart !== undefined || warmResponse !== undefined) {
-        const existing = db().prepare(
-          "SELECT id FROM compatibility_verdicts WHERE device_id = ? AND fork_id = ?"
-        ).get(device.id, fork.id) as { id: number } | undefined;
-
-        if (existing) {
-          if (coldStart !== undefined) {
-            db().prepare("UPDATE compatibility_verdicts SET cold_start_sec = ? WHERE id = ?")
-              .run(coldStart / 1000, existing.id);
-          }
-          if (warmResponse !== undefined) {
-            db().prepare("UPDATE compatibility_verdicts SET warm_response_sec = ? WHERE id = ?")
-              .run(warmResponse / 1000, existing.id);
-          }
-        }
+        await updateVerdictTimings(
+          device.id,
+          fork.id,
+          coldStart !== undefined ? coldStart / 1000 : undefined,
+          warmResponse !== undefined ? warmResponse / 1000 : undefined
+        );
       }
 
-      // Store raw JSON on the run
-      db().prepare("UPDATE benchmark_runs SET raw_json = ? WHERE id = ?")
-        .run(JSON.stringify(body), runId);
-
-      completeBenchmarkRun(runId, "completed");
+      await updateBenchmarkRunRawJson(runId, JSON.stringify(body));
+      await completeBenchmarkRun(runId, "completed");
 
       return NextResponse.json({ run_id: runId, status: "completed" }, { status: 201 });
     } catch (err) {
-      completeBenchmarkRun(runId, "failed", err instanceof Error ? err.message : "Unknown error");
+      await completeBenchmarkRun(runId, "failed", err instanceof Error ? err.message : "Unknown error");
       throw err;
     }
   } catch (err) {
@@ -165,7 +147,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Rate limit: 60 requests per minute per IP
     const ip = getClientIp(request);
     const rl = rateLimit(`benchmarks-get:${ip}`, 60, 60_000);
     if (!rl.success) {
@@ -186,17 +167,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const device = getDeviceBySlug(deviceSlug);
+    const device = await getDeviceBySlug(deviceSlug);
     if (!device) {
       return NextResponse.json({ error: `Device not found: ${deviceSlug}` }, { status: 404 });
     }
 
-    const fork = getForkBySlug(forkSlug);
+    const fork = await getForkBySlug(forkSlug);
     if (!fork) {
       return NextResponse.json({ error: `Fork not found: ${forkSlug}` }, { status: 404 });
     }
 
-    const summary = getLatestBenchmarkForDeviceFork(device.id, fork.id);
+    const summary = await getLatestBenchmarkForDeviceFork(device.id, fork.id);
     if (!summary) {
       return NextResponse.json({ error: "No benchmark data found" }, { status: 404 });
     }

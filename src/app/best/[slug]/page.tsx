@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -8,13 +8,19 @@ import {
   Flame,
   ArrowRight,
 } from "lucide-react";
-import {
-  getForkBySlug,
-  getDevicesByCategoryForFork,
-  getCategoryForkCombinations,
-} from "@/lib/queries";
+import { getDevicesByCategoryForForkCached, getForkBySlugCached } from "@/lib/queries-cached";
+import { createMetadata } from "@/lib/seo/metadata";
+import { evaluateSeoGuardrails } from "@/lib/seo/guardrails";
+import { createNeonDuplicateDetector } from "@/lib/seo/neon-duplicate-detector";
+import { breadcrumbsForBest, relatedLinksForBest } from "@/lib/seo/links";
+import { bestPath, canPath } from "@/lib/seo/routes";
+import { buildBreadcrumbList, buildFAQPage, buildSchemaGraph, buildTechArticle } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
+
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24h ISR; avoids build-time param explosion at scale.
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;
@@ -47,17 +53,6 @@ function categoryFromSlug(slug: string): string {
   return map[slug] ?? slug;
 }
 
-function categoryToSlug(category: string): string {
-  return category.toLowerCase().replace(/\s+/g, "-");
-}
-
-export async function generateStaticParams() {
-  const combos = getCategoryForkCombinations();
-  return combos.map((c) => ({
-    slug: `${categoryToSlug(c.category)}-for-${c.fork_slug}`,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -67,21 +62,43 @@ export async function generateMetadata({
   const parsed = parseSlug(slug);
   if (!parsed) return { title: "Not Found" };
 
-  const fork = getForkBySlug(parsed.forkSlug);
+  const fork = await getForkBySlugCached(parsed.forkSlug);
   const category = categoryFromSlug(parsed.category);
   if (!fork) return { title: "Not Found" };
 
-  const devices = getDevicesByCategoryForFork(category, fork.slug);
+  const devices = await getDevicesByCategoryForForkCached(category, fork.slug);
   const great = devices.filter((d) => d.verdict === "RUNS_GREAT").length;
+  const canonicalPath = bestPath(category, fork.slug);
+  const isCanonical = canonicalPath === `/best/${slug}`;
+  const hasAnyRunnable = devices.some((d) => d.verdict !== "WONT_RUN");
 
   const title = `Best ${category} for ${fork.name} in 2026`;
   const description = `Find the best ${category} hardware for running ${fork.name}. ${devices.length} devices tested, ${great} run great. Ranked by compatibility with performance benchmarks.`;
 
-  return {
+  const guardrails = await evaluateSeoGuardrails({
+    canonicalPath,
+    requestedIndexable: isCanonical && hasAnyRunnable,
+    content: {
+      title,
+      description,
+      h1: title,
+      headings: [
+        "Top Pick",
+        "All Devices Ranked",
+        "Compatibility verdict breakdown",
+      ],
+      body: devices.slice(0, 12).map((d) => d.name).join(" "),
+    },
+    policy: { minWords: 40 },
+    duplicateDetector: createNeonDuplicateDetector("best", { nearDistance: 3 }),
+  });
+
+  return createMetadata({
     title,
     description,
-    openGraph: { title, description },
-  };
+    canonicalPath: guardrails.canonicalPath,
+    indexable: guardrails.indexable,
+  });
 }
 
 export default async function CategoryLandingPage({
@@ -93,12 +110,18 @@ export default async function CategoryLandingPage({
   const parsed = parseSlug(slug);
   if (!parsed) notFound();
 
-  const fork = getForkBySlug(parsed.forkSlug);
+  const fork = await getForkBySlugCached(parsed.forkSlug);
   const category = categoryFromSlug(parsed.category);
   if (!fork) notFound();
 
-  const devices = getDevicesByCategoryForFork(category, fork.slug);
+  const canonicalPath = bestPath(category, fork.slug);
+  if (canonicalPath !== `/best/${slug}`) {
+    redirect(canonicalPath);
+  }
+
+  const devices = await getDevicesByCategoryForForkCached(category, fork.slug);
   if (devices.length === 0) notFound();
+  if (!devices.some((d) => d.verdict !== "WONT_RUN")) notFound();
 
   const verdictCounts = {
     RUNS_GREAT: devices.filter((d) => d.verdict === "RUNS_GREAT").length,
@@ -109,15 +132,46 @@ export default async function CategoryLandingPage({
 
   const topPick = devices.find((d) => d.verdict === "RUNS_GREAT") ?? devices[0];
 
+  const faqItems = [
+    {
+      question: `What is the best ${category} for running ${fork.name}?`,
+      answer: `${topPick.name} is a top pick based on compatibility verdicts and benchmark performance across tested devices in this category.`,
+    },
+    {
+      question: `How many ${category} devices have been tested with ${fork.name}?`,
+      answer: `${devices.length} ${category.toLowerCase()} device${devices.length === 1 ? "" : "s"} have official compatibility verdicts for ${fork.name}.`,
+    },
+    {
+      question: `Where can I see the detailed compatibility verdict for ${topPick.name}?`,
+      answer: `See /can/${fork.slug}/run-on/${topPick.slug} for specs, requirements, and benchmarks.`,
+    },
+  ];
+
+  const jsonLd = buildSchemaGraph([
+    buildTechArticle({
+      headline: `Best ${category} for ${fork.name}`,
+      description: `Ranked ${category} devices for running ${fork.name}, based on compatibility verdicts and performance benchmarks.`,
+      about: [
+        { "@type": "SoftwareApplication", name: fork.name },
+        { "@type": "Thing", name: category },
+      ],
+    }),
+    buildBreadcrumbList(breadcrumbsForBest({ fork, category })),
+    buildFAQPage(faqItems),
+  ]);
+
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
+      <JsonLd data={jsonLd} />
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1 text-sm text-navy-light mb-6">
         <Link href="/" className="hover:text-ocean-800">Home</Link>
         <ChevronRight size={14} />
-        <Link href="/devices" className="hover:text-ocean-800">Devices</Link>
+        <Link href="/forks" className="hover:text-ocean-800">Forks</Link>
         <ChevronRight size={14} />
-        <span className="text-navy">Best {category} for {fork.name}</span>
+        <Link href={`/forks/${fork.slug}`} className="hover:text-ocean-800">{fork.name}</Link>
+        <ChevronRight size={14} />
+        <span className="text-navy">Best {category}</span>
       </nav>
 
       {/* Header */}
@@ -272,7 +326,7 @@ export default async function CategoryLandingPage({
                     : "Free"}
                 </div>
                 <Link
-                  href={`/can/${fork.slug}/run-on/${d.slug}`}
+                  href={canPath(fork.slug, d.slug)}
                   className="mt-1 inline-block text-xs text-ocean-600 hover:text-ocean-800 transition-colors"
                 >
                   Details
@@ -283,23 +337,38 @@ export default async function CategoryLandingPage({
         </div>
       </div>
 
+      {/* FAQ */}
+      <div className="mt-6 rounded-xl border border-ocean-200 bg-white p-6">
+        <h2 className="font-heading text-lg font-semibold text-navy mb-4">
+          Frequently Asked Questions
+        </h2>
+        <div className="space-y-4">
+          {faqItems.map((item) => (
+            <div key={item.question}>
+              <h3 className="font-medium text-navy">{item.question}</h3>
+              <p className="mt-1 text-sm text-navy-light">{item.answer}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Related links */}
       <div className="mt-6 rounded-xl border border-ocean-200 bg-white p-6">
         <h3 className="text-sm font-semibold text-navy mb-3">Related Pages</h3>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href={`/forks/${fork.slug}`}
-            className="text-ocean-600 hover:text-ocean-800 transition-colors"
-          >
-            All {fork.name} devices
-          </Link>
-          <span className="text-ocean-200">|</span>
-          <Link
-            href={`/devices?category=${encodeURIComponent(category)}`}
-            className="text-ocean-600 hover:text-ocean-800 transition-colors"
-          >
-            All {category} devices
-          </Link>
+        <div className="space-y-2 text-sm">
+          {relatedLinksForBest({
+            fork,
+            category,
+            topDevices: devices.slice(0, 3),
+          }).map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="block text-ocean-600 hover:text-ocean-800 transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
         </div>
       </div>
     </main>

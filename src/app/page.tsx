@@ -9,27 +9,33 @@ import {
   Trophy,
   Waves,
 } from "lucide-react";
+import { cache } from "react";
 import { getDevicesRanked, getAllForks } from "@/lib/queries";
 import { DeviceCard } from "@/components/device-card";
 import { SearchBar } from "@/components/search-bar";
+import { createMetadata } from "@/lib/seo/metadata";
 
-export function generateMetadata(): Metadata {
-  const devices = getDevicesRanked();
-  const forks = getAllForks();
-  return {
-    title: "Can it run OpenClaw? | Hardware Compatibility for AI Agents",
-    description: `Find out if your hardware can run OpenClaw and its forks. Browse ${devices.length}+ devices across ${forks.length} forks — from $4 microcontrollers to cloud GPUs. Community-tested compatibility verdicts.`,
+const getCachedDevices = cache(() => getDevicesRanked());
+const getCachedForks = cache(() => getAllForks());
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [devices, forks] = await Promise.all([getCachedDevices(), getCachedForks()]);
+  const title = "Can it run OpenClaw? | Hardware Compatibility for AI Agents";
+  const description = `Find out if your hardware can run OpenClaw and its forks. Browse ${devices.length}+ devices across ${forks.length} forks — from $4 microcontrollers to cloud GPUs. Community-tested compatibility verdicts.`;
+
+  return createMetadata({
+    title,
+    description,
+    canonicalPath: "/",
     openGraph: {
-      title: "Can it run OpenClaw? | Hardware Compatibility for AI Agents",
-      description: `Browse ${devices.length}+ devices across ${forks.length} OpenClaw forks with community-tested compatibility verdicts.`,
+      siteName: "Can it run OpenClaw?",
     },
-  };
+  });
 }
 
-export default function Home() {
-  const allDevices = getDevicesRanked();
+export default async function Home() {
+  const [allDevices, forks] = await Promise.all([getCachedDevices(), getCachedForks()]);
   const topDevices = allDevices.slice(0, 6);
-  const forks = getAllForks();
 
   return (
     <main>
@@ -106,7 +112,7 @@ export default function Home() {
               opacity="0.75"
             />
           </svg>
-          {/* Wave 5 - front, matches page bg */}
+          {/* Wave 5 - front, blends into stats section */}
           <svg
             className="absolute bottom-0 w-[103%] -left-[1.5%]"
             style={{ height: "70px" }}
@@ -115,7 +121,7 @@ export default function Home() {
           >
             <path
               d="M0,35 C180,55 420,15 660,40 C900,65 1140,20 1440,38 L1440,70 L0,70 Z"
-              fill="#F8F9FA"
+              fill="#CAF0F8"
             />
           </svg>
         </div>
@@ -162,30 +168,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Stats */}
-      <section className="relative -mt-6 z-20 mx-auto max-w-5xl px-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-xl sm:text-2xl font-bold text-ocean-800">{allDevices.length}</div>
-            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Devices Tested</div>
-          </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-xl sm:text-2xl font-bold text-ocean-800">{forks.length}</div>
-            <div className="text-[10px] sm:text-xs text-navy-light mt-1">OpenClaw Forks</div>
-          </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-xl sm:text-2xl font-bold text-verdict-great">$4</div>
-            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Cheapest Device</div>
-          </div>
-          <div className="rounded-xl bg-white p-3 sm:p-4 text-center shadow-lg border border-ocean-100">
-            <div className="text-xl sm:text-2xl font-bold text-ocean-800">8MB</div>
-            <div className="text-[10px] sm:text-xs text-navy-light mt-1">Min RAM (MimiClaw)</div>
+      {/* Quick Stats — seated on the wave gradient */}
+      <section className="bg-gradient-to-b from-ocean-200 via-ocean-100 to-sand pb-10 pt-6 sm:pt-8">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="rounded-xl bg-white/70 backdrop-blur-sm p-4 sm:p-5 text-center shadow-sm border border-white/60">
+              <div className="text-2xl sm:text-3xl font-bold text-ocean-800">{allDevices.length}</div>
+              <div className="text-xs sm:text-sm text-ocean-700 font-medium mt-1">Devices Tested</div>
+            </div>
+            <div className="rounded-xl bg-white/70 backdrop-blur-sm p-4 sm:p-5 text-center shadow-sm border border-white/60">
+              <div className="text-2xl sm:text-3xl font-bold text-ocean-800">{forks.length}</div>
+              <div className="text-xs sm:text-sm text-ocean-700 font-medium mt-1">OpenClaw Forks</div>
+            </div>
+            <div className="rounded-xl bg-white/70 backdrop-blur-sm p-4 sm:p-5 text-center shadow-sm border border-white/60">
+              <div className="text-2xl sm:text-3xl font-bold text-verdict-great">$4</div>
+              <div className="text-xs sm:text-sm text-ocean-700 font-medium mt-1">Cheapest Device</div>
+            </div>
+            <div className="rounded-xl bg-white/70 backdrop-blur-sm p-4 sm:p-5 text-center shadow-sm border border-white/60">
+              <div className="text-2xl sm:text-3xl font-bold text-ocean-800">8MB</div>
+              <div className="text-xs sm:text-sm text-ocean-700 font-medium mt-1">Min RAM (MimiClaw)</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Top Rated Devices */}
-      <section className="mx-auto max-w-7xl px-4 py-16 pt-20">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:py-16">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-8">
           <div>
             <h2 className="font-heading text-xl sm:text-2xl font-bold text-navy flex items-center gap-2">
@@ -215,7 +223,7 @@ export default function Home() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {forks.map((fork) => {
-              const features = JSON.parse(fork.features) as string[];
+              const features = JSON.parse(fork.features ?? "[]") as string[];
               return (
                 <Link
                   key={fork.id}

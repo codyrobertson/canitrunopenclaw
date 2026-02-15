@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { getDevicesRanked, getVerdictsByDevice } from "@/lib/queries";
+import { createFilterAwareMetadata } from "@/lib/seo/listings";
+import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CompareSelector } from "@/components/compare-selector";
+import { JsonLd } from "@/components/json-ld";
 import Link from "next/link";
 import { ArrowRight, Cpu, MemoryStick, Zap, DollarSign, Monitor } from "lucide-react";
 
@@ -12,9 +15,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams;
   const selectedSlugs = params.devices?.split(",").filter(Boolean) ?? [];
+  const hasFilters = Boolean(params.devices);
 
-  if (selectedSlugs.length >= 2) {
-    const allDevices = getDevicesRanked();
+  if (hasFilters && selectedSlugs.length >= 2) {
+    const allDevices = await getDevicesRanked();
     const selectedDevices = selectedSlugs
       .map((slug) => allDevices.find((d) => d.slug === slug))
       .filter(Boolean) as typeof allDevices;
@@ -23,24 +27,22 @@ export async function generateMetadata({
       const names = selectedDevices.map((d) => d.name);
       const title = `Compare ${names.join(" vs ")}`;
       const description = `Side-by-side comparison of ${names.join(", ")} for OpenClaw compatibility. Compare specs, performance, and fork verdicts.`;
-      return {
-        title,
-        description,
-        openGraph: { title, description },
-      };
+        return createFilterAwareMetadata({
+          title,
+          description,
+          basePath: "/compare",
+          hasFilters: true,
+        });
     }
   }
 
-  return {
+  return createFilterAwareMetadata({
     title: "Compare Devices",
     description:
       "Compare up to 3 devices side-by-side to find your perfect OpenClaw host. See specs, pricing, and fork compatibility verdicts.",
-    openGraph: {
-      title: "Compare Devices",
-      description:
-        "Compare up to 3 devices side-by-side to find your perfect OpenClaw host.",
-    },
-  };
+    basePath: "/compare",
+    hasFilters,
+  });
 }
 
 function formatRam(gb: number): string {
@@ -76,21 +78,31 @@ export default async function ComparePage({
   searchParams: Promise<{ devices?: string }>;
 }) {
   const params = await searchParams;
-  const allDevices = getDevicesRanked();
+  const allDevices = await getDevicesRanked();
   const selectedSlugs = params.devices?.split(",").filter(Boolean) ?? [];
   const selectedDevices = selectedSlugs
     .map((slug) => allDevices.find((d) => d.slug === slug))
     .filter(Boolean) as typeof allDevices;
 
-  const verdictsByDevice = selectedDevices.map((d) => ({
-    device: d,
-    verdicts: getVerdictsByDevice(d.id),
-  }));
+  const verdictsByDevice = await Promise.all(
+    selectedDevices.map(async (d) => ({
+      device: d,
+      verdicts: await getVerdictsByDevice(d.id),
+    }))
+  );
 
   const allForkNames = [...new Set(verdictsByDevice.flatMap((v) => v.verdicts.map((vv) => vv.fork_name)))];
 
+  const jsonLd = buildSchemaGraph([
+    buildBreadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Compare", path: "/compare" },
+    ]),
+  ]);
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <JsonLd data={jsonLd} />
       <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy mb-1">Compare Devices</h1>
       <p className="text-sm text-navy-light mb-6">Select up to 3 devices to compare side-by-side.</p>
 
@@ -160,11 +172,11 @@ export default async function ComparePage({
               {/* Specs comparison */}
               <div className="rounded-xl border border-ocean-200 bg-white p-5">
                 <h2 className="text-sm font-semibold text-navy mb-3">Specifications</h2>
-                <SpecRow label="RAM" icon={MemoryStick} values={selectedDevices.map((d) => <span className="font-semibold">{formatRam(d.ram_gb)}</span>)} />
-                <SpecRow label="CPU" icon={Cpu} values={selectedDevices.map((d) => <span className="text-xs">{d.cpu ?? "—"}</span>)} />
-                <SpecRow label="GPU" icon={Monitor} values={selectedDevices.map((d) => <span className="text-xs">{d.gpu ?? "—"}</span>)} />
+                <SpecRow label="RAM" icon={MemoryStick} values={selectedDevices.map((d) => <span key={d.id} className="font-semibold">{formatRam(d.ram_gb)}</span>)} />
+                <SpecRow label="CPU" icon={Cpu} values={selectedDevices.map((d) => <span key={d.id} className="text-xs">{d.cpu ?? "—"}</span>)} />
+                <SpecRow label="GPU" icon={Monitor} values={selectedDevices.map((d) => <span key={d.id} className="text-xs">{d.gpu ?? "—"}</span>)} />
                 <SpecRow label="Power" icon={Zap} values={selectedDevices.map((d) => d.power_watts ? `${d.power_watts}W` : "—")} />
-                <SpecRow label="Price" icon={DollarSign} values={selectedDevices.map((d) => <span className="font-semibold text-ocean-800">{formatPrice(d)}</span>)} />
+                <SpecRow label="Price" icon={DollarSign} values={selectedDevices.map((d) => <span key={d.id} className="font-semibold text-ocean-800">{formatPrice(d)}</span>)} />
               </div>
 
               {/* Fork verdicts */}

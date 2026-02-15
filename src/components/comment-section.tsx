@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { postComment } from "@/app/actions";
 import type { Comment } from "@/lib/queries";
 
@@ -41,13 +43,27 @@ export function CommentSection({
           </div>
         </form>
       ) : (
-        <p className="mb-6 text-sm text-navy-light bg-ocean-100 rounded-lg p-3">Sign in with GitHub to leave a comment.</p>
+        <p className="mb-6 text-sm text-navy-light bg-ocean-100 rounded-lg p-3">
+          <Link href="/auth/sign-in" className="text-ocean-800 font-medium hover:underline">
+            Sign in
+          </Link>{" "}
+          to leave a comment.
+        </p>
       )}
       <div className="space-y-4">
         {comments.map((comment) => (
           <div key={comment.id} className="rounded-lg border border-ocean-200 bg-white p-4">
             <div className="flex items-center gap-2 mb-2">
-              {comment.avatar_url && <img src={comment.avatar_url} alt="" className="h-6 w-6 rounded-full" />}
+              {comment.avatar_url && (
+                <Image
+                  src={comment.avatar_url}
+                  alt=""
+                  width={24}
+                  height={24}
+                  sizes="24px"
+                  className="h-6 w-6 rounded-full"
+                />
+              )}
               <span className="text-sm font-medium text-navy">{comment.username}</span>
               <span className="text-xs text-navy-light">{new Date(comment.created_at).toLocaleDateString()}</span>
             </div>

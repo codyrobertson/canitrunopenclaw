@@ -2,28 +2,33 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ExternalLink, Star, ShieldCheck } from "lucide-react";
+import { cache } from "react";
 import { getForkBySlug, getDevicesByFork, getLatestForkVerification } from "@/lib/queries";
+import { createMetadata } from "@/lib/seo/metadata";
+import { bestPath, canPath, forkPath } from "@/lib/seo/routes";
+import { buildBreadcrumbList, buildSchemaGraph, buildSoftwareApplication } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
 
+const getFork = cache((slug: string) => getForkBySlug(slug));
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const fork = getForkBySlug(slug);
+  const fork = await getFork(slug);
   if (!fork) return { title: "Fork Not Found" };
 
-  const devices = getDevicesByFork(fork.id);
+  const devices = await getDevicesByFork(fork.id);
+  const runnableCount = devices.filter((d) => d.verdict !== "WONT_RUN").length;
   const title = `${fork.name} - OpenClaw Fork`;
   const minRamStr = fork.min_ram_mb === 0 ? "Serverless" : fork.min_ram_mb < 1024 ? `${fork.min_ram_mb}MB` : `${(fork.min_ram_mb / 1024).toFixed(0)}GB`;
-  const description = `${fork.description ?? fork.name} Min ${minRamStr} RAM. Compatible with ${devices.length} devices.`;
+  const description = `${fork.description ?? fork.name} Min ${minRamStr} RAM. Compatible with ${runnableCount} devices.`;
 
-  return {
+  return createMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-    },
-  };
+    canonicalPath: `/forks/${fork.slug}`,
+  });
 }
 
 function formatRam(gb: number): string {
@@ -46,18 +51,20 @@ const maturityConfig: Record<string, { label: string; color: string; desc: strin
 
 export default async function ForkDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const fork = getForkBySlug(slug);
+  const fork = await getFork(slug);
   if (!fork) notFound();
 
-  const devices = getDevicesByFork(fork.id);
-  const features = JSON.parse(fork.features) as string[];
-  const maturity = maturityConfig[fork.maturity] ?? maturityConfig.beta;
-
-  // Check verification status
-  const verification = getLatestForkVerification(fork.id);
-  const isRecentlyVerified = verification
-    && verification.status === "verified"
-    && (Date.now() - new Date(verification.verified_at + "Z").getTime()) < 30 * 24 * 60 * 60 * 1000;
+  const [devices, verification] = await Promise.all([
+    getDevicesByFork(fork.id),
+    getLatestForkVerification(fork.id),
+  ]);
+  const runnableDevices = devices.filter((d) => d.verdict !== "WONT_RUN");
+  const runnableCategories = [...new Set(runnableDevices.map((d) => d.category))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const features = JSON.parse(fork.features ?? "[]") as string[];
+  const maturity = maturityConfig[fork.maturity ?? "beta"] ?? maturityConfig.beta;
+  const isRecentlyVerified = Boolean(verification?.is_recent);
 
   const verdictCounts = {
     RUNS_GREAT: devices.filter(d => d.verdict === "RUNS_GREAT").length,
@@ -67,51 +74,26 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
   };
   const total = devices.length;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "SoftwareApplication",
-        name: fork.name,
-        description: fork.description ?? fork.name,
-        applicationCategory: "AI Agent Framework",
-        operatingSystem: "Cross-platform",
-        ...(fork.license ? { license: fork.license } : {}),
-        ...(fork.github_url ? { url: fork.github_url } : {}),
-        ...(fork.creator ? { author: { "@type": "Person", name: fork.creator } } : {}),
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item: "https://canitrunclaw.com",
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Forks",
-            item: "https://canitrunclaw.com/forks",
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: fork.name,
-            item: `https://canitrunclaw.com/forks/${fork.slug}`,
-          },
-        ],
-      },
-    ],
-  };
+  const jsonLd = buildSchemaGraph([
+    buildSoftwareApplication({
+      name: fork.name,
+      description: fork.description ?? fork.name,
+      applicationCategory: "AI Agent Framework",
+      operatingSystem: "Cross-platform",
+      license: fork.license ?? undefined,
+      url: fork.github_url ?? undefined,
+      authorName: fork.creator ?? undefined,
+    }),
+    buildBreadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Forks", path: "/forks" },
+      { name: fork.name, path: forkPath(fork.slug) },
+    ]),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       <nav className="text-sm text-navy-light mb-6">
         <Link href="/forks" className="hover:text-ocean-800">Forks</Link>
         <span className="mx-2">/</span>
@@ -127,8 +109,11 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
               <span className={`text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded border ${maturity.color}`}>
                 {maturity.label}
               </span>
-              {isRecentlyVerified && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded" title={`Verified ${new Date(verification.verified_at + "Z").toLocaleDateString()}`}>
+              {isRecentlyVerified && verification && (
+                <span
+                  className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded"
+                  title={`Verified ${new Date(verification.verified_at + "Z").toLocaleDateString()}`}
+                >
                   <ShieldCheck size={12} />
                   Verified
                 </span>
@@ -143,8 +128,8 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
                 GitHub <ExternalLink size={14} />
               </a>
             )}
-            {fork.github_stars > 0 && (
-              <span className="text-sm text-navy-light flex items-center gap-1"><Star size={14} className="fill-amber-400 text-amber-400" /> {formatStars(fork.github_stars)} stars</span>
+            {(fork.github_stars ?? 0) > 0 && (
+              <span className="text-sm text-navy-light flex items-center gap-1"><Star size={14} className="fill-amber-400 text-amber-400" /> {formatStars(fork.github_stars ?? 0)} stars</span>
             )}
           </div>
         </div>
@@ -168,7 +153,7 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
           </div>
           <div className="rounded-lg bg-ocean-50 p-3">
             <div className="text-xs text-ocean-600 font-medium">Min CPU</div>
-            <div className="text-lg font-semibold text-navy">{fork.min_cpu_cores} core{fork.min_cpu_cores > 1 ? "s" : ""}</div>
+            <div className="text-lg font-semibold text-navy">{fork.min_cpu_cores ?? 1} core{(fork.min_cpu_cores ?? 1) > 1 ? "s" : ""}</div>
           </div>
           <div className="rounded-lg bg-ocean-50 p-3">
             <div className="text-xs text-ocean-600 font-medium">Language</div>
@@ -230,12 +215,38 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
         </div>
       )}
 
+      {/* Hub links: fork -> best (category hubs) */}
+      {runnableCategories.length > 0 && (
+        <div className="rounded-xl border border-ocean-200 bg-white p-8 mb-6">
+          <h2 className="font-heading text-xl font-semibold text-navy mb-4">
+            Best Devices by Category
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {runnableCategories.slice(0, 10).map((cat) => (
+              <Link
+                key={cat}
+                href={bestPath(cat, fork.slug)}
+                className="text-sm rounded-full bg-ocean-50 border border-ocean-200 px-3 py-1.5 hover:border-ocean-400 hover:bg-ocean-100 transition-colors"
+              >
+                Best {cat}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Compatible Devices */}
       <div className="rounded-xl border border-ocean-200 bg-white p-8">
-        <h2 className="font-heading text-xl font-semibold text-navy mb-4">Compatible Devices ({devices.length})</h2>
+        <h2 className="font-heading text-xl font-semibold text-navy mb-4">
+          Compatible Devices ({runnableDevices.length})
+        </h2>
         <div className="space-y-3">
-          {devices.map((d) => (
-            <Link key={d.id} href={`/devices/${d.slug}`} className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4 hover:border-ocean-300 transition-colors group">
+          {runnableDevices.map((d) => (
+            <Link
+              key={d.id}
+              href={canPath(fork.slug, d.slug)}
+              className="flex items-center gap-4 rounded-lg border border-ocean-100 p-4 hover:border-ocean-300 transition-colors group"
+            >
               <VerdictBadge verdict={d.verdict} size="sm" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

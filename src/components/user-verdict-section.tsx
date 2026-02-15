@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { ThumbsUp, ThumbsDown, ShieldCheck, Upload, MessageSquare } from "lucide-react";
 import { submitVerdict, voteVerdict } from "@/app/actions";
 import { VerdictBadge } from "@/components/verdict-badge";
@@ -41,7 +43,10 @@ export function UserVerdictSection({
         <VerdictForm deviceId={deviceId} forks={forks} />
       ) : (
         <p className="mb-6 text-sm text-navy-light bg-ocean-100 rounded-lg p-3">
-          Sign in with GitHub to submit your compatibility report.
+          <Link href="/auth/sign-in" className="text-ocean-800 font-medium hover:underline">
+            Sign in
+          </Link>{" "}
+          to submit your compatibility report.
         </p>
       )}
 
@@ -302,7 +307,14 @@ function VerdictCard({
         <div className="flex flex-wrap items-center gap-2 mb-1">
           <div className="flex items-center gap-1.5">
             {verdict.avatar_url && (
-              <img src={verdict.avatar_url} alt="" className="h-5 w-5 rounded-full" />
+              <Image
+                src={verdict.avatar_url}
+                alt=""
+                width={20}
+                height={20}
+                sizes="20px"
+                className="h-5 w-5 rounded-full"
+              />
             )}
             <span className="text-sm font-medium text-navy">{verdict.username}</span>
           </div>

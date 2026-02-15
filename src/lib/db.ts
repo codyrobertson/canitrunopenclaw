@@ -1,26 +1,19 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "./schema";
 
-const DB_PATH = path.join(process.cwd(), "data", "openclaw.db");
+const isTest = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
+const databaseUrl = isTest ? process.env.DATABASE_URL_TEST : process.env.DATABASE_URL;
 
-function getDb() {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  return db;
+if (isTest && !process.env.DATABASE_URL_TEST) {
+  throw new Error(
+    "DATABASE_URL_TEST must be set when running tests (to avoid writing to production Neon)."
+  );
 }
 
-let _db: ReturnType<typeof getDb> | null = null;
-
-export function db() {
-  if (!_db) {
-    _db = getDb();
-  }
-  return _db;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not configured.");
 }
+
+const sql = neon(databaseUrl);
+export const db = drizzle(sql, { schema });

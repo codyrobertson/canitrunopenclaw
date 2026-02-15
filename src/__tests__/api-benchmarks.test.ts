@@ -9,8 +9,8 @@ function makeRequest(url: string, init?: { method?: string; headers?: Record<str
 
 describe("GET /api/benchmarks", () => {
   it("returns benchmark data for valid device and fork slugs", async () => {
-    const devices = getDevicesRanked();
-    const forks = getAllForks();
+    const devices = await getDevicesRanked();
+    const forks = await getAllForks();
 
     if (devices.length === 0 || forks.length === 0) {
       // Skip if no seed data
@@ -59,7 +59,7 @@ describe("GET /api/benchmarks", () => {
   });
 
   it("returns 404 for an invalid fork slug", async () => {
-    const devices = getDevicesRanked();
+    const devices = await getDevicesRanked();
     if (devices.length === 0) {
       expect(true).toBe(true);
       return;
@@ -78,8 +78,8 @@ describe("GET /api/benchmarks", () => {
 
 describe("POST /api/benchmarks", () => {
   it("creates a benchmark run with valid body", async () => {
-    const devices = getDevicesRanked();
-    const forks = getAllForks();
+    const devices = await getDevicesRanked();
+    const forks = await getAllForks();
 
     if (devices.length === 0 || forks.length === 0) {
       expect(true).toBe(true);
@@ -136,7 +136,7 @@ describe("POST /api/benchmarks", () => {
   });
 
   it("returns 404 for nonexistent device", async () => {
-    const forks = getAllForks();
+    const forks = await getAllForks();
     if (forks.length === 0) {
       expect(true).toBe(true);
       return;

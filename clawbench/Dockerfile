@@ -3,9 +3,9 @@ FROM node:20-slim
 WORKDIR /bench
 
 # Core tools + language toolchains
-# Go: for PicoClaw
-# Rust: for ZeroClaw and IronClaw
-# C build tools: for MimiClaw (C via ESP-IDF, but we can at least compile standard C)
+# Go: for PicoClaw (arm64, amd64 only — no armhf or riscv64 official builds)
+# Rust: for ZeroClaw and IronClaw (supports all architectures via rustup)
+# C build tools: for MimiClaw
 # Python: for Nanobot
 # Node/TypeScript: already in base image for NanoClaw/OpenClaw
 RUN apt-get update && \
@@ -16,13 +16,18 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g tsx 2>/dev/null || true
 
-# Install Go (latest stable)
+# Install Go — only on architectures that have official builds
 ENV GO_VERSION=1.23.6
-RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-$(dpkg --print-architecture).tar.gz" | tar -C /usr/local -xz
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "arm64" ]; then \
+      curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C /usr/local -xz; \
+    else \
+      echo "Skipping Go install — no official build for $ARCH"; \
+    fi
 ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 ENV GOPATH="/root/go"
 
-# Install Rust via rustup (minimal profile)
+# Install Rust via rustup (supports all platforms)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
 ENV PATH="/root/.cargo/bin:${PATH}"
 

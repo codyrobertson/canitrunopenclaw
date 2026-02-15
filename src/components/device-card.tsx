@@ -14,7 +14,7 @@ function formatRam(gb: number): string {
   return `${gb}GB`;
 }
 
-function formatPrice(price: number | null, type: string): string {
+function formatPrice(price: number | null, type: string | null): string {
   if (!price) return "Free";
   return type === "monthly" ? `$${price}/mo` : `$${price}`;
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -7,13 +7,21 @@ import {
   Minus,
 } from "lucide-react";
 import {
-  getDeviceBySlug,
   getVerdictsByDevice,
-  getComparisonPairs,
 } from "@/lib/queries";
 import type { Device, Verdict } from "@/lib/queries";
+import { getDeviceBySlugCached } from "@/lib/queries-cached";
+import { createMetadata } from "@/lib/seo/metadata";
+import { evaluateSeoGuardrails } from "@/lib/seo/guardrails";
+import { createNeonDuplicateDetector } from "@/lib/seo/neon-duplicate-detector";
+import { breadcrumbsForCompare, relatedLinksForCompare } from "@/lib/seo/links";
+import { buildBreadcrumbList, buildSchemaGraph, buildTechArticle } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
+
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24h ISR; avoids build-time param explosion at scale.
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;
@@ -43,6 +51,11 @@ function verdictScore(verdict: string): number {
   return scores[verdict] ?? 0;
 }
 
+function formatPrice(d: Device): string {
+  if (!d.price_usd) return "Free";
+  return d.price_type === "monthly" ? `$${d.price_usd}/mo` : `$${d.price_usd}`;
+}
+
 function computeWinner(
   device1: Device,
   device2: Device,
@@ -69,13 +82,6 @@ function computeWinner(
   return { winner: null, reason: "Both devices have equal overall compatibility" };
 }
 
-export async function generateStaticParams() {
-  const pairs = getComparisonPairs();
-  return pairs.map((p) => ({
-    slugs: `${p.slug1}-vs-${p.slug2}`,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -85,18 +91,34 @@ export async function generateMetadata({
   const parsed = parseSlugs(slugs);
   if (!parsed) return { title: "Not Found" };
 
-  const device1 = getDeviceBySlug(parsed.slug1);
-  const device2 = getDeviceBySlug(parsed.slug2);
+  const device1 = await getDeviceBySlugCached(parsed.slug1);
+  const device2 = await getDeviceBySlugCached(parsed.slug2);
   if (!device1 || !device2) return { title: "Not Found" };
 
-  const title = `${device1.name} vs ${device2.name} for OpenClaw`;
-  const description = `Side-by-side comparison of ${device1.name} (${formatRam(device1.ram_gb)} RAM, $${device1.price_usd ?? "Free"}) and ${device2.name} (${formatRam(device2.ram_gb)} RAM, $${device2.price_usd ?? "Free"}) for running OpenClaw forks. See specs, verdicts, and which one wins.`;
+  const canonicalSlugs =
+    device1.id < device2.id
+      ? `${device1.slug}-vs-${device2.slug}`
+      : `${device2.slug}-vs-${device1.slug}`;
+  const isCanonical = canonicalSlugs === slugs;
+  const canonicalPath = `/compare/${canonicalSlugs}`;
 
-  return {
+  const title = `${device1.name} vs ${device2.name} for OpenClaw`;
+  const description = `Side-by-side comparison of ${device1.name} (${formatRam(device1.ram_gb)} RAM, ${formatPrice(device1)}) and ${device2.name} (${formatRam(device2.ram_gb)} RAM, ${formatPrice(device2)}) for running OpenClaw forks. See specs, verdicts, and which one wins.`;
+
+  const guardrails = await evaluateSeoGuardrails({
+    canonicalPath,
+    requestedIndexable: isCanonical,
+    content: { title, description, h1: title },
+    policy: { minWords: 30 },
+    duplicateDetector: createNeonDuplicateDetector("compare", { nearDistance: 0 }),
+  });
+
+  return createMetadata({
     title,
     description,
-    openGraph: { title, description },
-  };
+    canonicalPath: guardrails.canonicalPath,
+    indexable: guardrails.indexable,
+  });
 }
 
 export default async function ComparisonPage({
@@ -108,12 +130,20 @@ export default async function ComparisonPage({
   const parsed = parseSlugs(slugs);
   if (!parsed) notFound();
 
-  const device1 = getDeviceBySlug(parsed.slug1);
-  const device2 = getDeviceBySlug(parsed.slug2);
+  const device1 = await getDeviceBySlugCached(parsed.slug1);
+  const device2 = await getDeviceBySlugCached(parsed.slug2);
   if (!device1 || !device2) notFound();
 
-  const verdicts1 = getVerdictsByDevice(device1.id);
-  const verdicts2 = getVerdictsByDevice(device2.id);
+  const canonicalSlugs =
+    device1.id < device2.id
+      ? `${device1.slug}-vs-${device2.slug}`
+      : `${device2.slug}-vs-${device1.slug}`;
+  if (canonicalSlugs !== slugs) {
+    redirect(`/compare/${canonicalSlugs}`);
+  }
+
+  const verdicts1 = await getVerdictsByDevice(device1.id);
+  const verdicts2 = await getVerdictsByDevice(device2.id);
 
   const allForkNames = [
     ...new Set([...verdicts1.map((v) => v.fork_name), ...verdicts2.map((v) => v.fork_name)]),
@@ -156,8 +186,22 @@ export default async function ComparisonPage({
 
   const ramHighlight = getRamHighlight(device1, device2);
 
+  const description = `Side-by-side comparison of ${device1.name} (${formatRam(device1.ram_gb)} RAM, ${formatPrice(device1)}) and ${device2.name} (${formatRam(device2.ram_gb)} RAM, ${formatPrice(device2)}) for running OpenClaw forks.`;
+  const jsonLd = buildSchemaGraph([
+    buildTechArticle({
+      headline: `${device1.name} vs ${device2.name} for OpenClaw`,
+      description,
+      about: [
+        { "@type": "Product", name: device1.name },
+        { "@type": "Product", name: device2.name },
+      ],
+    }),
+    buildBreadcrumbList(breadcrumbsForCompare({ device1, device2 })),
+  ]);
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <JsonLd data={jsonLd} />
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1 text-sm text-navy-light mb-6">
         <Link href="/" className="hover:text-ocean-800">Home</Link>
@@ -294,6 +338,22 @@ export default async function ComparisonPage({
           <p className="mt-1 text-sm text-navy-light line-clamp-2">{device2.description}</p>
           <div className="mt-3 text-sm text-ocean-600">View full details &rarr;</div>
         </Link>
+      </div>
+
+      {/* Related links */}
+      <div className="mt-6 rounded-xl border border-ocean-200 bg-white p-6">
+        <h3 className="text-sm font-semibold text-navy mb-3">Related Pages</h3>
+        <div className="space-y-2 text-sm">
+          {relatedLinksForCompare({ device1, device2 }).map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="block text-ocean-600 hover:text-ocean-800 transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </main>
   );

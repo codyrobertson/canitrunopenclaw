@@ -1,9 +1,9 @@
 #!/bin/bash
-# ClawBench Runner
+# ClawBench Runner v3 — QEMU Architecture Emulation
 # Simulates target device constraints in Docker:
-#   - CPU speed throttled relative to host (not just core count)
-#   - I/O throttled to match storage type (microSD, eMMC, NVMe, etc.)
-#   - Memory hard-limited
+#   - QEMU architecture emulation (arm64, armv7, amd64) via --platform
+#   - CPU speed throttled relative to host via --cpus
+#   - Memory hard-limited via --memory
 #
 # Usage: ./clawbench/run.sh <device-slug> <fork-slug>
 
@@ -14,7 +14,9 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DB_PATH="$PROJECT_DIR/data/openclaw.db"
 API_ENDPOINT="${API_ENDPOINT:-}"
 API_KEY="${API_KEY:-}"
-DOCKER_IMAGE="clawbench:latest"
+
+# Fix Docker credential helper PATH (Docker Desktop on macOS)
+export PATH="/Applications/Docker.app/Contents/Resources/bin:${PATH}"
 
 usage() {
   echo "Usage: $0 <device-slug> <fork-slug>"

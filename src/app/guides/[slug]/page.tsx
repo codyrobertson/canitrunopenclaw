@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -18,14 +18,25 @@ import {
   ExternalLink,
 } from "lucide-react";
 import {
-  getDeviceBySlug,
-  getForkBySlug,
-  getVerdictForDeviceAndFork,
-  getNonWontRunVerdicts,
   getAffiliateLinks,
 } from "@/lib/queries";
+import {
+  getDeviceBySlugCached,
+  getForkBySlugCached,
+  getVerdictForDeviceAndForkCached,
+} from "@/lib/queries-cached";
+import { createMetadata } from "@/lib/seo/metadata";
+import { evaluateSeoGuardrails } from "@/lib/seo/guardrails";
+import { createNeonDuplicateDetector } from "@/lib/seo/neon-duplicate-detector";
+import { breadcrumbsForGuide, relatedLinksForGuide } from "@/lib/seo/links";
+import { guidePath } from "@/lib/seo/routes";
+import { buildBreadcrumbList, buildHowTo, buildSchemaGraph } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
+
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24h ISR; avoids build-time param explosion at scale.
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;
@@ -368,13 +379,6 @@ function getCategoryTips(category: string): { tip: string; icon: "lightbulb" }[]
   return (tips[category] ?? tips.Desktop ?? []).map((tip) => ({ tip, icon: "lightbulb" as const }));
 }
 
-export async function generateStaticParams() {
-  const combos = getNonWontRunVerdicts();
-  return combos.map((c) => ({
-    slug: `${c.fork_slug}-on-${c.device_slug}`,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -384,18 +388,38 @@ export async function generateMetadata({
   const parsed = parseSlug(slug);
   if (!parsed) return { title: "Not Found" };
 
-  const device = getDeviceBySlug(parsed.deviceSlug);
-  const fork = getForkBySlug(parsed.forkSlug);
+  const device = await getDeviceBySlugCached(parsed.deviceSlug);
+  const fork = await getForkBySlugCached(parsed.forkSlug);
   if (!device || !fork) return { title: "Not Found" };
 
   const title = `How to Set Up ${fork.name} on ${device.name}`;
   const description = `Step-by-step guide to install and run ${fork.name} (${fork.language}) on ${device.name}. Prerequisites, install commands, expected performance, and tips for ${device.category} devices.`;
 
-  return {
+  const canonicalPath = guidePath(fork.slug, device.slug);
+  const canonicalSlug = `${fork.slug}-on-${device.slug}`;
+  const isCanonical = canonicalSlug === slug;
+  const installSteps = getInstallSteps(fork.language, fork.name, fork.slug, fork.github_url);
+
+  const guardrails = await evaluateSeoGuardrails({
+    canonicalPath,
+    requestedIndexable: isCanonical,
+    content: {
+      title,
+      description,
+      h1: title,
+      headings: ["Prerequisites", "Install Steps", "Troubleshooting", "Tips"],
+      body: installSteps.map((s) => s.title).join(" "),
+    },
+    policy: { minWords: 40 },
+    duplicateDetector: createNeonDuplicateDetector("guides", { nearDistance: 3 }),
+  });
+
+  return createMetadata({
     title,
     description,
-    openGraph: { title, description },
-  };
+    canonicalPath: guardrails.canonicalPath,
+    indexable: guardrails.indexable,
+  });
 }
 
 export default async function SetupGuidePage({
@@ -407,52 +431,45 @@ export default async function SetupGuidePage({
   const parsed = parseSlug(slug);
   if (!parsed) notFound();
 
-  const device = getDeviceBySlug(parsed.deviceSlug);
-  const fork = getForkBySlug(parsed.forkSlug);
+  const device = await getDeviceBySlugCached(parsed.deviceSlug);
+  const fork = await getForkBySlugCached(parsed.forkSlug);
   if (!device || !fork) notFound();
 
-  const verdict = getVerdictForDeviceAndFork(parsed.deviceSlug, parsed.forkSlug);
+  const canonicalSlug = `${fork.slug}-on-${device.slug}`;
+  if (slug !== canonicalSlug) {
+    redirect(`/guides/${canonicalSlug}`);
+  }
+
+  const verdict = await getVerdictForDeviceAndForkCached(parsed.deviceSlug, parsed.forkSlug);
   if (!verdict || verdict.verdict === "WONT_RUN") notFound();
 
   const installSteps = getInstallSteps(fork.language, fork.name, fork.slug, fork.github_url);
   const tips = getCategoryTips(device.category);
-  const affiliateLinks = getAffiliateLinks(device.id);
+  const affiliateLinks = await getAffiliateLinks(device.id);
 
   const ramAvailableMb = device.ram_gb * 1024;
   const ramOk = fork.min_ram_mb === 0 || ramAvailableMb >= fork.min_ram_mb;
   const storageOk = true;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: `How to Set Up ${fork.name} on ${device.name}`,
-    description: `Install and configure ${fork.name} on ${device.name}`,
-    totalTime: `PT${installSteps.length * 5}M`,
-    tool: [
-      { "@type": "HowToTool", name: device.name },
-    ],
-    step: installSteps.map((step, idx) => ({
-      "@type": "HowToStep",
-      position: idx + 1,
-      name: step.title,
-      text: step.description,
-      ...(step.command
-        ? {
-            itemListElement: {
-              "@type": "HowToDirection",
-              text: step.command,
-            },
-          }
-        : {}),
-    })),
-  };
+  const jsonLd = buildSchemaGraph([
+    buildHowTo({
+      name: `How to Set Up ${fork.name} on ${device.name}`,
+      description: `Install and configure ${fork.name} on ${device.name}`,
+      totalTime: `PT${installSteps.length * 5}M`,
+      tools: [device.name],
+      steps: installSteps.map((step, idx) => ({
+        position: idx + 1,
+        name: step.title,
+        text: step.description,
+        command: step.command,
+      })),
+    }),
+    buildBreadcrumbList(breadcrumbsForGuide({ fork, device })),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1 text-sm text-navy-light mb-6">
@@ -530,7 +547,7 @@ export default async function SetupGuidePage({
                 <div className="flex-1 text-sm">
                   <span className="font-medium text-navy">CPU: </span>
                   <span className="text-navy-light">
-                    {fork.min_cpu_cores} core{fork.min_cpu_cores > 1 ? "s" : ""} minimum
+                    {fork.min_cpu_cores ?? 1} core{(fork.min_cpu_cores ?? 1) > 1 ? "s" : ""} minimum
                   </span>
                 </div>
                 <CheckCircle2 size={18} className="text-verdict-great shrink-0" />
@@ -684,30 +701,15 @@ export default async function SetupGuidePage({
           <div className="rounded-xl border border-ocean-200 bg-white p-6">
             <h3 className="text-sm font-semibold text-navy mb-3">Related Pages</h3>
             <div className="space-y-2 text-sm">
-              <Link
-                href={`/can/${fork.slug}/run-on/${device.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                {fork.name} on {device.name} compatibility
-              </Link>
-              <Link
-                href={`/devices/${device.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                {device.name} full details
-              </Link>
-              <Link
-                href={`/forks/${fork.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                All {fork.name} compatible devices
-              </Link>
-              <Link
-                href={`/best/${device.category.toLowerCase().replace(/\s+/g, "-")}-for-${fork.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                Best {device.category} for {fork.name}
-              </Link>
+              {relatedLinksForGuide({ fork, device }).map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="block text-ocean-600 hover:text-ocean-800 transition-colors"
+                >
+                  {l.label}
+                </Link>
+              ))}
             </div>
           </div>
 

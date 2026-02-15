@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Github, Rss } from "lucide-react";
-import { getAllForks, getCategories } from "@/lib/queries";
+import { getAllForks, getCategories, getCategoryForkCombinationChunk } from "@/lib/queries";
+import { bestPath } from "@/lib/seo/routes";
 
 const popularDevices = [
   { slug: "raspberry-pi-5-8gb", name: "Raspberry Pi 5" },
@@ -17,9 +18,11 @@ const popularDevices = [
   { slug: "iphone-15-pro", name: "iPhone 15 Pro" },
 ];
 
-export function Footer() {
-  const forks = getAllForks();
-  const categories = getCategories();
+export async function Footer() {
+  const forks = await getAllForks();
+  const categories = await getCategories();
+  const guideCombos = await getCategoryForkCombinationChunk(0, 24);
+  const forkNameBySlug = new Map(forks.map((f) => [f.slug, f.name]));
 
   return (
     <footer className="border-t border-ocean-200 bg-white">
@@ -29,7 +32,12 @@ export function Footer() {
           {/* Brand column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">&#x1F980;</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/canitrunopenclawlogo.svg"
+                alt="Can it run OpenClaw?"
+                className="h-7 w-auto"
+              />
               <span className="font-heading font-bold text-navy">
                 Can it run OpenClaw?
               </span>
@@ -155,7 +163,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/best/sbc"
+                  href={bestPath("SBC", "openclaw")}
                   className="text-xs text-navy-light hover:text-ocean-800 transition-colors"
                 >
                   Best SBCs for OpenClaw
@@ -163,7 +171,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/best/budget"
+                  href="/devices?maxPrice=100"
                   className="text-xs text-navy-light hover:text-ocean-800 transition-colors"
                 >
                   Best Budget Devices
@@ -171,7 +179,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/best/mini-pc"
+                  href={bestPath("Mini PC", "openclaw")}
                   className="text-xs text-navy-light hover:text-ocean-800 transition-colors"
                 >
                   Best Mini PCs
@@ -197,27 +205,27 @@ export function Footer() {
           </div>
         </div>
 
-        {/* pSEO: "Can [Fork] run on [Category]?" links */}
-        <div className="mt-10 border-t border-ocean-100 pt-6">
-          <h3 className="text-xs font-semibold text-navy uppercase tracking-wider mb-3">
-            Compatibility Guides
-          </h3>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            {forks.slice(0, 6).flatMap((fork) =>
-              ["SBC", "Mini PC", "Laptop", "Desktop", "Phone", "NAS"].map(
-                (cat) => (
-                  <Link
-                    key={`${fork.slug}-${cat}`}
-                    href={`/best/${cat.toLowerCase().replace(/ /g, "-")}?fork=${fork.slug}`}
-                    className="text-[11px] text-navy-light hover:text-ocean-600 transition-colors"
-                  >
-                    {fork.name} on {cat}
-                  </Link>
-                )
-              )
-            )}
-          </div>
-        </div>
+	        {/* pSEO: "Can [Fork] run on [Category]?" links */}
+	        <div className="mt-10 border-t border-ocean-100 pt-6">
+	          <h3 className="text-xs font-semibold text-navy uppercase tracking-wider mb-3">
+	            Compatibility Guides
+	          </h3>
+	          <div className="flex flex-wrap gap-x-4 gap-y-1">
+	            {guideCombos.map((combo) => {
+	              const forkName = forkNameBySlug.get(combo.fork_slug);
+	              if (!forkName) return null;
+	              return (
+	                <Link
+	                  key={`${combo.fork_slug}-${combo.category}`}
+	                  href={bestPath(combo.category, combo.fork_slug)}
+	                  className="text-[11px] text-navy-light hover:text-ocean-600 transition-colors"
+	                >
+	                  {forkName} on {combo.category}
+	                </Link>
+	              );
+	            })}
+	          </div>
+	        </div>
 
         {/* Bottom bar */}
         <div className="mt-8 border-t border-ocean-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-navy-light">

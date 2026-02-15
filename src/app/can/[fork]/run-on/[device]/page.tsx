@@ -15,15 +15,25 @@ import {
 } from "lucide-react";
 import { BuyButton, BuyButtonFallback } from "@/components/buy-button";
 import {
-  getDeviceBySlug,
-  getForkBySlug,
-  getVerdictForDeviceAndFork,
-  getAllVerdictCombinations,
   getSimilarDevicesForFork,
   getAffiliateLinks,
 } from "@/lib/queries";
+import {
+  getDeviceBySlugCached,
+  getForkBySlugCached,
+  getVerdictForDeviceAndForkCached,
+} from "@/lib/queries-cached";
+import { createMetadata } from "@/lib/seo/metadata";
+import { evaluateSeoGuardrails } from "@/lib/seo/guardrails";
+import { createNeonDuplicateDetector } from "@/lib/seo/neon-duplicate-detector";
+import { breadcrumbsForCan, relatedLinksForCan } from "@/lib/seo/links";
+import { buildBreadcrumbList, buildFAQPage, buildSchemaGraph, buildTechArticle } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
+
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24h ISR; avoids build-time param explosion at scale.
 
 function formatRam(gb: number): string {
   if (gb < 0.001) return `${Math.round(gb * 1024 * 1024)}KB`;
@@ -41,12 +51,51 @@ function meetsRequirement(available: number, required: number): boolean {
   return available >= required;
 }
 
-export async function generateStaticParams() {
-  const combos = getAllVerdictCombinations();
-  return combos.map((c) => ({
-    fork: c.fork_slug,
-    device: c.device_slug,
-  }));
+type VerdictCode = "RUNS_GREAT" | "RUNS_OK" | "BARELY_RUNS" | "WONT_RUN";
+
+function verdictSentenceFor(code: VerdictCode): string {
+  return (
+    {
+      RUNS_GREAT: "Yes. It runs great.",
+      RUNS_OK: "Yes, mostly. It runs OK with some tradeoffs.",
+      BARELY_RUNS: "Barely. It may run, but it's not a great experience.",
+      WONT_RUN: "No. It won't run on this device.",
+    }[code] ?? "Unknown."
+  );
+}
+
+function buildCanFaqItems(args: {
+  fork: {
+    name: string;
+    slug: string;
+    min_ram_mb: number;
+    min_cpu_cores: number | null;
+    min_storage_mb: number | null;
+  };
+  device: { name: string; slug: string };
+  verdict: { verdict: VerdictCode; notes: string | null };
+}) {
+  const verdictSentence = verdictSentenceFor(args.verdict.verdict);
+  const storageRequirement =
+    args.fork.min_storage_mb === null ? "unknown storage" : `${args.fork.min_storage_mb}MB storage`;
+
+  return [
+    {
+      question: `Can ${args.fork.name} run on ${args.device.name}?`,
+      answer: `${verdictSentence}${args.verdict.notes ? ` ${args.verdict.notes}` : ""}`,
+    },
+    {
+      question: `What are the minimum requirements for ${args.fork.name}?`,
+      answer:
+        args.fork.min_ram_mb === 0
+          ? `${args.fork.name} is serverless or does not require local hardware resources.`
+          : `Minimum: ${formatRamMb(args.fork.min_ram_mb)} RAM, ${args.fork.min_cpu_cores ?? 1} CPU core(s), ${storageRequirement}.`,
+    },
+    {
+      question: `Where can I find a setup guide for ${args.fork.name} on ${args.device.name}?`,
+      answer: `See the setup guide at /guides/${args.fork.slug}-on-${args.device.slug}.`,
+    },
+  ];
 }
 
 export async function generateMetadata({
@@ -55,24 +104,42 @@ export async function generateMetadata({
   params: Promise<{ fork: string; device: string }>;
 }): Promise<Metadata> {
   const { fork: forkSlug, device: deviceSlug } = await params;
-  const device = getDeviceBySlug(deviceSlug);
-  const fork = getForkBySlug(forkSlug);
+  const device = await getDeviceBySlugCached(deviceSlug);
+  const fork = await getForkBySlugCached(forkSlug);
 
   if (!device || !fork) return { title: "Not Found" };
 
-  const verdict = getVerdictForDeviceAndFork(deviceSlug, forkSlug);
-  const verdictLabel = verdict
-    ? { RUNS_GREAT: "Yes!", RUNS_OK: "Yes, mostly", BARELY_RUNS: "Barely", WONT_RUN: "No" }[verdict.verdict]
-    : "Unknown";
+  const verdict = await getVerdictForDeviceAndForkCached(deviceSlug, forkSlug);
+  if (!verdict) return { title: "Not Found" };
+
+  const verdictLabel =
+    ({ RUNS_GREAT: "Yes!", RUNS_OK: "Yes, mostly", BARELY_RUNS: "Barely", WONT_RUN: "No" } as const)[verdict.verdict] ??
+    "Unknown";
 
   const title = `Can ${fork.name} Run on ${device.name}? ${verdictLabel}`;
   const description = `${verdictLabel} - See if ${fork.name} (${fork.language}) runs on ${device.name} (${formatRam(device.ram_gb)} RAM). Compatibility verdict, performance benchmarks, and setup info.`;
 
-  return {
+  const faqItems = buildCanFaqItems({ fork, device, verdict: { verdict: verdict.verdict as VerdictCode, notes: verdict.notes } });
+
+  const guardrails = await evaluateSeoGuardrails({
+    canonicalPath: `/can/${fork.slug}/run-on/${device.slug}`,
+    requestedIndexable: verdict.verdict !== "WONT_RUN",
+    content: {
+      title,
+      description,
+      h1: `Can ${fork.name} Run on ${device.name}?`,
+      faqs: faqItems,
+    },
+    policy: { minWords: 40 },
+    duplicateDetector: createNeonDuplicateDetector("can", { nearDistance: 3 }),
+  });
+
+  return createMetadata({
     title,
     description,
-    openGraph: { title, description },
-  };
+    canonicalPath: guardrails.canonicalPath,
+    indexable: guardrails.indexable,
+  });
 }
 
 export default async function ForkDeviceComboPage({
@@ -81,51 +148,38 @@ export default async function ForkDeviceComboPage({
   params: Promise<{ fork: string; device: string }>;
 }) {
   const { fork: forkSlug, device: deviceSlug } = await params;
-  const device = getDeviceBySlug(deviceSlug);
-  const fork = getForkBySlug(forkSlug);
+  const device = await getDeviceBySlugCached(deviceSlug);
+  const fork = await getForkBySlugCached(forkSlug);
 
   if (!device || !fork) notFound();
 
-  const verdict = getVerdictForDeviceAndFork(deviceSlug, forkSlug);
+  const verdict = await getVerdictForDeviceAndForkCached(deviceSlug, forkSlug);
   if (!verdict) notFound();
 
-  const similarDevices = getSimilarDevicesForFork(device, fork.id, 6);
-  const affiliateLinks = getAffiliateLinks(device.id);
+  const similarDevices = await getSimilarDevicesForFork(device, fork.id, 6);
+  const affiliateLinks = await getAffiliateLinks(device.id);
 
   const ramAvailableMb = device.ram_gb * 1024;
   const ramMeetsReq = meetsRequirement(ramAvailableMb, fork.min_ram_mb);
-  const storageMeetsReq = true; // We don't have numeric storage for devices
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "TechArticle",
-        headline: `Can ${fork.name} Run on ${device.name}?`,
-        description: verdict.notes ?? `Compatibility information for ${fork.name} on ${device.name}`,
-        about: [
-          { "@type": "SoftwareApplication", name: fork.name },
-          { "@type": "Product", name: device.name },
-        ],
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: "https://canitrunclaw.com" },
-          { "@type": "ListItem", position: 2, name: "Forks", item: "https://canitrunclaw.com/forks" },
-          { "@type": "ListItem", position: 3, name: fork.name, item: `https://canitrunclaw.com/forks/${fork.slug}` },
-          { "@type": "ListItem", position: 4, name: device.name, item: `https://canitrunclaw.com/can/${fork.slug}/run-on/${device.slug}` },
-        ],
-      },
-    ],
-  };
+  const faqItems = buildCanFaqItems({ fork, device, verdict: { verdict: verdict.verdict as VerdictCode, notes: verdict.notes } });
+
+  const jsonLd = buildSchemaGraph([
+    buildTechArticle({
+      headline: `Can ${fork.name} Run on ${device.name}?`,
+      description: verdict.notes ?? `Compatibility information for ${fork.name} on ${device.name}`,
+      about: [
+        { "@type": "SoftwareApplication", name: fork.name },
+        { "@type": "Product", name: device.name },
+      ],
+    }),
+    buildBreadcrumbList(breadcrumbsForCan({ fork, device })),
+    buildFAQPage(faqItems),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
 
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1 text-xs sm:text-sm text-navy-light mb-4 sm:mb-6 flex-wrap">
@@ -197,7 +251,7 @@ export default async function ForkDeviceComboPage({
                   <div className="text-sm font-medium text-navy">CPU</div>
                   <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1 text-xs sm:text-sm">
                     <span className="text-navy-light">
-                      Needs <span className="font-semibold text-navy">{fork.min_cpu_cores} core{fork.min_cpu_cores > 1 ? "s" : ""}</span>
+                      Needs <span className="font-semibold text-navy">{fork.min_cpu_cores ?? 1} core{(fork.min_cpu_cores ?? 1) > 1 ? "s" : ""}</span>
                     </span>
                     <span className="text-navy-light">/</span>
                     <span className="text-navy-light truncate">
@@ -290,6 +344,23 @@ export default async function ForkDeviceComboPage({
               </div>
             </div>
           )}
+
+          {/* FAQ (keep in sync with FAQPage schema) */}
+          <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
+            <h2 className="font-heading text-base sm:text-lg font-semibold text-navy mb-4">
+              FAQ
+            </h2>
+            <div className="space-y-3">
+              {faqItems.map((item) => (
+                <details key={item.question} className="rounded-lg border border-ocean-100 p-4">
+                  <summary className="cursor-pointer text-sm font-medium text-navy">
+                    {item.question}
+                  </summary>
+                  <p className="mt-2 text-sm text-navy-light">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -378,7 +449,7 @@ export default async function ForkDeviceComboPage({
               </div>
               <div className="flex justify-between">
                 <dt className="text-navy-light">Min CPU</dt>
-                <dd className="font-medium text-navy">{fork.min_cpu_cores} core{fork.min_cpu_cores > 1 ? "s" : ""}</dd>
+                <dd className="font-medium text-navy">{fork.min_cpu_cores ?? 1} core{(fork.min_cpu_cores ?? 1) > 1 ? "s" : ""}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-navy-light">Min Storage</dt>
@@ -391,24 +462,15 @@ export default async function ForkDeviceComboPage({
           <div className="rounded-xl border border-ocean-200 bg-white p-6">
             <h3 className="text-sm font-semibold text-navy mb-3">Related Pages</h3>
             <div className="space-y-2 text-sm">
-              <Link
-                href={`/devices/${device.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                {device.name} compatibility
-              </Link>
-              <Link
-                href={`/forks/${fork.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                All {fork.name} devices
-              </Link>
-              <Link
-                href={`/best/${device.category.toLowerCase().replace(/\s+/g, "-")}-for-${fork.slug}`}
-                className="block text-ocean-600 hover:text-ocean-800 transition-colors"
-              >
-                Best {device.category} for {fork.name}
-              </Link>
+              {relatedLinksForCan({ fork, device }).map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="block text-ocean-600 hover:text-ocean-800 transition-colors"
+                >
+                  {l.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { generateSitemaps } from "@/app/sitemap";
+import { generateSitemapChunkIds } from "@/lib/seo/sitemaps";
 
 describe("sitemap chunking", () => {
   test("generateSitemaps returns numeric sitemap ids", async () => {
-    const ids = await generateSitemaps();
+    const ids = await generateSitemapChunkIds();
     const idNums = ids.map((x) => x.id);
 
     expect(idNums).toContain(0);       // static

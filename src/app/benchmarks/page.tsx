@@ -16,18 +16,29 @@ import {
   getCategories,
   getAllForks,
 } from "@/lib/queries";
+import { createFilterAwareMetadata } from "@/lib/seo/listings";
+import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
+import { JsonLd } from "@/components/json-ld";
 
-export function generateMetadata(): Metadata {
-  const total = getBenchmarkTotalRuns();
-  const summaries = getBenchmarkForkSummaries();
-  return {
-    title: "ClawBench Benchmarks | Hardware Performance Leaderboard",
-    description: `ClawBench benchmark results for ${summaries.length} OpenClaw forks across ${total} device tests. Compare cold start times, memory usage, and capability scores.`,
-    openGraph: {
-      title: "ClawBench Benchmarks | Hardware Performance Leaderboard",
-      description: `${total} benchmark runs across ${summaries.length} forks. See which hardware runs OpenClaw best.`,
-    },
-  };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ fork?: string; category?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const total = await getBenchmarkTotalRuns();
+  const summaries = await getBenchmarkForkSummaries();
+
+  const title = "ClawBench Benchmarks | Hardware Performance Leaderboard";
+  const description = `ClawBench benchmark results for ${summaries.length} OpenClaw forks across ${total} device tests. Compare cold start times, memory usage, and capability scores.`;
+
+  const hasFilters = Boolean(params.fork || params.category);
+  return createFilterAwareMetadata({
+    title,
+    description,
+    basePath: "/benchmarks",
+    hasFilters,
+  });
 }
 
 function formatMs(ms: number | null): string {
@@ -37,14 +48,16 @@ function formatMs(ms: number | null): string {
   return `${(ms / 60000).toFixed(1)}m`;
 }
 
-function scoreColor(score: number): string {
+function scoreColor(score: number | null): string {
+  if (score === null) return "text-navy-light";
   if (score >= 85) return "text-verdict-great";
   if (score >= 60) return "text-verdict-ok";
   if (score >= 30) return "text-amber-600";
   return "text-verdict-wont";
 }
 
-function scoreBg(score: number): string {
+function scoreBg(score: number | null): string {
+  if (score === null) return "bg-gray-50 border-gray-200";
   if (score >= 85) return "bg-green-50 border-green-200";
   if (score >= 60) return "bg-blue-50 border-blue-200";
   if (score >= 30) return "bg-amber-50 border-amber-200";
@@ -71,18 +84,28 @@ export default async function BenchmarksPage({
   const forkFilter = params.fork;
   const categoryFilter = params.category;
 
-  const summaries = getBenchmarkForkSummaries();
-  const totalRuns = getBenchmarkTotalRuns();
-  const leaderboard = getBenchmarkLeaderboard({
-    forkSlug: forkFilter,
-    category: categoryFilter,
-    limit: 100,
-  });
-  const categories = getCategories();
-  const allForks = getAllForks();
+  const [summaries, totalRuns, leaderboard, categories, allForks] = await Promise.all([
+    getBenchmarkForkSummaries(),
+    getBenchmarkTotalRuns(),
+    getBenchmarkLeaderboard({
+      forkSlug: forkFilter,
+      category: categoryFilter,
+      limit: 100,
+    }),
+    getCategories(),
+    getAllForks(),
+  ]);
+
+  const jsonLd = buildSchemaGraph([
+    buildBreadcrumbList([
+      { name: "Home", path: "/" },
+      { name: "Benchmarks", path: "/benchmarks" },
+    ]),
+  ]);
 
   return (
     <main>
+      <JsonLd data={jsonLd} />
       {/* Hero */}
       <section className="bg-gradient-to-b from-ocean-900 to-ocean-700 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4">
@@ -284,7 +307,7 @@ export default async function BenchmarksPage({
                       <span
                         className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-bold ${scoreBg(entry.overall_score)} ${scoreColor(entry.overall_score)}`}
                       >
-                        {entry.overall_score}
+                        {entry.overall_score ?? "-"}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-right text-navy-light font-mono text-xs hidden sm:table-cell">

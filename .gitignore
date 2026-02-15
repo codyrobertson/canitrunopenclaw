@@ -33,6 +33,8 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.local.example
+!.env.test.example
+!.env.staging.example
 
 # vercel
 .vercel
@@ -46,3 +48,12 @@ next-env.d.ts
 
 # data directory
 data/
+
+# benchmark results
+clawbench/results/
+
+# screenshots
+homepage*.png
+
+# seed backups
+*.ts.bak

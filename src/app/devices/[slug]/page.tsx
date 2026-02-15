@@ -1,25 +1,32 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { cache } from "react";
 import { Snowflake, Flame } from "lucide-react";
 import { BuyButton, BuyButtonFallback } from "@/components/buy-button";
-import { getDeviceBySlug, getVerdictsByDevice, getCommentsByDevice, getDeviceRatings, getSimilarDevices, getVerdictCountsByDevice, getAffiliateLinks, getAllForks, getUserVerdictsByDevice, getUserVerdictVotes, getBenchmarksByDevice, getBenchmarksByDeviceAndFork } from "@/lib/queries";
+import { getDeviceBySlug, getVerdictsByDevice, getCommentsByDevice, getDeviceRatings, getSimilarDevices, getVerdictCountsByDevice, getAffiliateLinks, getAllForks, getUserVerdictsByDevice, getUserVerdictVotes, getBenchmarksByDevice, getBenchmarksByDeviceAndFork, getUserByAuthId, upsertUser } from "@/lib/queries";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { StarRating } from "@/components/star-rating";
 import { CommentSection } from "@/components/comment-section";
 import { UserVerdictSection } from "@/components/user-verdict-section";
 import { CategoryBadge } from "@/components/device-card";
 import { BenchmarkResults } from "@/components/benchmark-results";
+import { createMetadata } from "@/lib/seo/metadata";
+import { breadcrumbsForDevice } from "@/lib/seo/links";
+import { bestPath, canPath, guidePath } from "@/lib/seo/routes";
+import { buildBreadcrumbList, buildProduct, buildSchemaGraph } from "@/lib/seo/schema";
+
+// React cache deduplicates this across generateMetadata + page render
+const getDevice = cache((slug: string) => getDeviceBySlug(slug));
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const device = getDeviceBySlug(slug);
+  const device = await getDevice(slug);
   if (!device) return { title: "Device Not Found" };
 
-  const verdicts = getVerdictsByDevice(device.id);
-  const ratings = getDeviceRatings(device.id);
+  const verdicts = await getVerdictsByDevice(device.id);
 
   const title = `${device.name} - Can it run OpenClaw?`;
   const descParts = [device.description ?? device.name];
@@ -28,14 +35,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   descParts.push(`See compatibility with ${verdicts.length} OpenClaw forks.`);
   const description = descParts.join(". ");
 
-  return {
+  return createMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-    },
-  };
+    canonicalPath: `/devices/${device.slug}`,
+  });
 }
 
 function formatRam(gb: number): string {
@@ -46,92 +50,97 @@ function formatRam(gb: number): string {
 
 export default async function DeviceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const device = getDeviceBySlug(slug);
+  const device = await getDevice(slug);
   if (!device) notFound();
 
-  const verdicts = getVerdictsByDevice(device.id);
-  const comments = getCommentsByDevice(device.id);
-  const ratings = getDeviceRatings(device.id);
-  const similar = getSimilarDevices(device, 4);
-  const verdictCounts = getVerdictCountsByDevice(device.id);
-  const affiliateLinks = getAffiliateLinks(device.id);
-  const forks = getAllForks();
-  const userVerdicts = getUserVerdictsByDevice(device.id);
-  const benchmarks = getBenchmarksByDevice(device.id);
+  // Fire all independent queries in parallel
+  const [
+    verdicts,
+    comments,
+    ratings,
+    similar,
+    verdictCounts,
+    affiliateLinks,
+    forks,
+    userVerdicts,
+    benchmarks,
+    sessionResult,
+  ] = await Promise.all([
+    getVerdictsByDevice(device.id),
+    getCommentsByDevice(device.id),
+    getDeviceRatings(device.id),
+    getSimilarDevices(device, 4),
+    getVerdictCountsByDevice(device.id),
+    getAffiliateLinks(device.id),
+    getAllForks(),
+    getUserVerdictsByDevice(device.id),
+    getBenchmarksByDevice(device.id),
+    auth.getSession(),
+  ]);
+
+  const { data: session } = sessionResult;
+
+  // Benchmark details — parallel fetch for all unique forks
+  const forkSlugsInBenchmarks = [...new Set(benchmarks.map(b => b.fork_slug))];
+  const detailEntries = await Promise.all(
+    forkSlugsInBenchmarks.map(async (forkSlug) => {
+      const fork = forks.find(f => f.slug === forkSlug);
+      if (!fork) return null;
+      const details = await getBenchmarksByDeviceAndFork(device.id, fork.id);
+      // Map run_ids for this fork back to details
+      return benchmarks
+        .filter(b => b.fork_slug === forkSlug)
+        .map(b => [b.run_id, details] as const);
+    })
+  );
   const detailsByRunId: Record<number, import("@/lib/queries").BenchmarkResult[]> = {};
-  for (const b of benchmarks) {
-    const fork = forks.find(f => f.slug === b.fork_slug);
-    if (fork) {
-      detailsByRunId[b.run_id] = getBenchmarksByDeviceAndFork(device.id, fork.id);
+  for (const entries of detailEntries) {
+    if (!entries) continue;
+    for (const [runId, details] of entries) {
+      detailsByRunId[runId] = details;
     }
   }
-  const session = await auth();
 
-  // Get user's existing votes on community verdicts
+  // User data — only if signed in
   let userVerdictVotes: Record<number, number> = {};
   if (session?.user) {
-    const githubId = (session as any).githubId;
-    const user = db().prepare("SELECT id FROM users WHERE github_id = ?").get(githubId) as { id: number } | undefined;
+    const [, user] = await Promise.all([
+      upsertUser(
+        session.user.id,
+        session.user.name ?? session.user.email ?? "User",
+        session.user.image ?? null
+      ),
+      getUserByAuthId(session.user.id),
+    ]);
     if (user) {
-      userVerdictVotes = getUserVerdictVotes(user.id, device.id);
+      userVerdictVotes = await getUserVerdictVotes(user.id, device.id);
     }
   }
 
   const bestVerdict = verdicts.find(v => v.verdict === "RUNS_GREAT") ?? verdicts[0];
   const totalVerdicts = Object.values(verdictCounts).reduce((a, b) => a + b, 0);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Product",
-        name: device.name,
-        description: device.description ?? device.name,
-        category: device.category,
-        ...(ratings.avg && ratings.count > 0
-          ? {
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: ratings.avg.toFixed(1),
-                ratingCount: ratings.count,
-                bestRating: 5,
-                worstRating: 1,
-              },
-            }
-          : {}),
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item: "https://canitrunclaw.com",
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Devices",
-            item: "https://canitrunclaw.com/devices",
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: device.name,
-            item: `https://canitrunclaw.com/devices/${device.slug}`,
-          },
-        ],
-      },
-    ],
-  };
+  const aggregateRating =
+    ratings.avg !== null && ratings.count > 0
+      ? {
+          ratingValue: Number(ratings.avg.toFixed(1)),
+          ratingCount: ratings.count,
+        }
+      : undefined;
+
+  const jsonLd = buildSchemaGraph([
+    buildProduct({
+      name: device.name,
+      description: device.description ?? device.name,
+      category: device.category,
+      aggregateRating,
+    }),
+    buildBreadcrumbList(breadcrumbsForDevice(device)),
+  ]);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       <nav className="text-sm text-navy-light mb-6">
         <Link href="/devices" className="hover:text-ocean-800">Devices</Link>
         <span className="mx-2">/</span>
@@ -253,6 +262,30 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
                   <div className="flex-1 min-w-0">
                     <Link href={`/forks/${v.fork_slug}`} className="font-medium text-navy hover:text-ocean-800">{v.fork_name}</Link>
                     {v.notes && <p className="mt-1 text-sm text-navy-light">{v.notes}</p>}
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                      {v.verdict !== "WONT_RUN" && (
+                        <>
+                          <Link
+                            href={canPath(v.fork_slug, device.slug)}
+                            className="text-ocean-600 hover:text-ocean-800 transition-colors"
+                          >
+                            Verdict page
+                          </Link>
+                          <Link
+                            href={guidePath(v.fork_slug, device.slug)}
+                            className="text-ocean-600 hover:text-ocean-800 transition-colors"
+                          >
+                            Setup guide
+                          </Link>
+                        </>
+                      )}
+                      <Link
+                        href={bestPath(device.category, v.fork_slug)}
+                        className="text-navy-light hover:text-ocean-800 transition-colors"
+                      >
+                        Best {device.category}
+                      </Link>
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-navy-light">
                       {v.cold_start_sec && <span className="flex items-center gap-1"><Snowflake size={14} className="text-ocean-600" /> {v.cold_start_sec}s cold start</span>}
                       {v.warm_response_sec && <span className="flex items-center gap-1"><Flame size={14} className="text-orange-500" /> {v.warm_response_sec}s warm</span>}
@@ -292,7 +325,14 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
           {bestVerdict && (
             <div className="rounded-xl border border-ocean-200 bg-white p-6">
               <h3 className="text-sm font-semibold text-navy mb-3">Best Fork for This Device</h3>
-              <Link href={`/forks/${bestVerdict.fork_slug}`} className="block rounded-lg border border-verdict-great/30 bg-verdict-great/5 p-4 hover:border-verdict-great/50 transition-colors">
+              <Link
+                href={
+                  bestVerdict.verdict !== "WONT_RUN"
+                    ? canPath(bestVerdict.fork_slug, device.slug)
+                    : `/forks/${bestVerdict.fork_slug}`
+                }
+                className="block rounded-lg border border-verdict-great/30 bg-verdict-great/5 p-4 hover:border-verdict-great/50 transition-colors"
+              >
                 <div className="flex items-center gap-2 mb-1">
                   <VerdictBadge verdict={bestVerdict.verdict} size="sm" />
                   <span className="font-medium text-navy">{bestVerdict.fork_name}</span>

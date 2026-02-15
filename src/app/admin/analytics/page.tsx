@@ -1,102 +1,14 @@
-import type { Metadata } from "next";
 import { BarChart3, TrendingUp, Eye, MousePointer, ExternalLink } from "lucide-react";
-import { db } from "@/lib/db";
+import { getViewCount, getTopPages, getTopReferrers, getViewsByDay, getAffiliateClickStats } from "@/lib/queries";
 
-export const metadata: Metadata = {
-  title: "Analytics Dashboard",
-  robots: { index: false, follow: false },
-};
-
-type ViewCount = { count: number };
-type TopPage = { path: string; views: number };
-type TopReferrer = { referrer: string; views: number };
-type DayView = { day: string; views: number };
-type AffiliateClickRow = {
-  device_name: string;
-  network: string;
-  clicks: number;
-  label: string | null;
-};
-
-function ensurePageViewsTable() {
-  db().exec(`
-    CREATE TABLE IF NOT EXISTS page_views (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      path TEXT NOT NULL,
-      referrer TEXT,
-      user_agent TEXT,
-      country TEXT,
-      viewed_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-  db().exec(`CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path)`);
-  db().exec(`CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at)`);
-}
-
-function getViewCount(daysAgo: number): number {
-  const row = db()
-    .prepare(
-      "SELECT COUNT(*) as count FROM page_views WHERE viewed_at >= datetime('now', ?)"
-    )
-    .get(`-${daysAgo} days`) as ViewCount;
-  return row.count;
-}
-
-function getTopPages(limit = 20): TopPage[] {
-  return db()
-    .prepare(
-      `SELECT path, COUNT(*) as views FROM page_views
-       WHERE viewed_at >= datetime('now', '-30 days')
-       GROUP BY path ORDER BY views DESC LIMIT ?`
-    )
-    .all(limit) as TopPage[];
-}
-
-function getTopReferrers(limit = 15): TopReferrer[] {
-  return db()
-    .prepare(
-      `SELECT referrer, COUNT(*) as views FROM page_views
-       WHERE referrer IS NOT NULL AND referrer != '' AND viewed_at >= datetime('now', '-30 days')
-       GROUP BY referrer ORDER BY views DESC LIMIT ?`
-    )
-    .all(limit) as TopReferrer[];
-}
-
-function getViewsByDay(): DayView[] {
-  return db()
-    .prepare(
-      `SELECT date(viewed_at) as day, COUNT(*) as views FROM page_views
-       WHERE viewed_at >= datetime('now', '-30 days')
-       GROUP BY date(viewed_at) ORDER BY day ASC`
-    )
-    .all() as DayView[];
-}
-
-function getAffiliateClicks(): AffiliateClickRow[] {
-  return db()
-    .prepare(
-      `SELECT d.name as device_name, al.network, al.label, COUNT(ac.id) as clicks
-       FROM affiliate_clicks ac
-       JOIN affiliate_links al ON al.id = ac.affiliate_link_id
-       JOIN devices d ON d.id = al.device_id
-       WHERE ac.clicked_at >= datetime('now', '-30 days')
-       GROUP BY al.id
-       ORDER BY clicks DESC
-       LIMIT 20`
-    )
-    .all() as AffiliateClickRow[];
-}
-
-export default function AnalyticsPage() {
-  ensurePageViewsTable();
-
-  const todayViews = getViewCount(1);
-  const weekViews = getViewCount(7);
-  const monthViews = getViewCount(30);
-  const topPages = getTopPages();
-  const topReferrers = getTopReferrers();
-  const viewsByDay = getViewsByDay();
-  const affiliateClicks = getAffiliateClicks();
+export default async function AnalyticsPage() {
+  const todayViews = await getViewCount(1);
+  const weekViews = await getViewCount(7);
+  const monthViews = await getViewCount(30);
+  const topPages = await getTopPages();
+  const topReferrers = await getTopReferrers();
+  const viewsByDay = await getViewsByDay();
+  const affiliateClicks = await getAffiliateClickStats();
 
   const maxDayViews = Math.max(...viewsByDay.map((d) => d.views), 1);
 

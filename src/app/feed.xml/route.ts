@@ -10,7 +10,7 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-  const devices = getAllDevices();
+  const devices = await getAllDevices();
 
   // Sort by ID descending (newest first), take top 50
   const recent = devices

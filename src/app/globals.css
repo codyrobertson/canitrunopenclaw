@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@neondatabase/auth/ui/tailwind";
 
 @theme {
   --color-ocean-900: #023E8A;
@@ -60,4 +61,116 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-drift {
   animation: drift 6s ease-in-out infinite;
+}
+
+/* Neon Auth UI — ocean theme overrides scoped to auth pages */
+.auth-page {
+  --neon-radius: 0.75rem;
+  --neon-background: transparent;
+  --neon-foreground: #1B263B;
+  --neon-card: rgba(255, 255, 255, 0.85);
+  --neon-card-foreground: #1B263B;
+  --neon-popover: #ffffff;
+  --neon-popover-foreground: #1B263B;
+  --neon-primary: #023E8A;
+  --neon-primary-foreground: #ffffff;
+  --neon-secondary: rgba(255, 255, 255, 0.6);
+  --neon-secondary-foreground: #023E8A;
+  --neon-muted: rgba(202, 240, 248, 0.4);
+  --neon-muted-foreground: #2D3A4F;
+  --neon-accent: rgba(202, 240, 248, 0.5);
+  --neon-accent-foreground: #023E8A;
+  --neon-destructive: #D32F2F;
+  --neon-destructive-foreground: #ffffff;
+  --neon-border: rgba(0, 119, 182, 0.18);
+  --neon-input: rgba(0, 119, 182, 0.12);
+  --neon-ring: #48CAE4;
+}
+
+/* Auth card — frosted glass */
+.auth-page [data-slot="card"] {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow:
+    0 8px 32px rgba(2, 62, 138, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Card title — use heading font */
+.auth-page [data-slot="card-title"] {
+  font-family: var(--font-heading);
+  color: #023E8A;
+}
+
+/* Card description */
+.auth-page [data-slot="card-description"] {
+  color: #2D3A4F;
+}
+
+/* Labels */
+.auth-page [data-slot="form-label"] {
+  color: #1B263B;
+  font-weight: 600;
+}
+
+/* Inputs */
+.auth-page [data-slot="form-control"],
+.auth-page input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(0, 119, 182, 0.2) !important;
+  color: #1B263B !important;
+}
+.auth-page input::placeholder {
+  color: #90A4B8 !important;
+}
+.auth-page input:focus {
+  border-color: #48CAE4 !important;
+  box-shadow: 0 0 0 2px rgba(72, 202, 228, 0.25) !important;
+}
+
+/* Primary button (Login) — deep ocean */
+.auth-page [data-slot="button"].bg-primary,
+.auth-page button.bg-primary {
+  background: linear-gradient(135deg, #023E8A, #0077B6) !important;
+  border: none !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(2, 62, 138, 0.3);
+}
+.auth-page [data-slot="button"].bg-primary:hover,
+.auth-page button.bg-primary:hover {
+  background: linear-gradient(135deg, #012D6B, #006199) !important;
+}
+
+/* Secondary button (Email Code) */
+.auth-page [data-slot="button"].bg-secondary,
+.auth-page button.bg-secondary {
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: #023E8A !important;
+  border: 1px solid rgba(0, 119, 182, 0.2) !important;
+}
+.auth-page [data-slot="button"].bg-secondary:hover,
+.auth-page button.bg-secondary:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Footer link text */
+.auth-page [data-slot="card-footer"] {
+  color: #2D3A4F;
+}
+.auth-page [data-slot="card-footer"] [data-slot="button"] {
+  color: #0077B6 !important;
+  font-weight: 600;
+}
+.auth-page [data-slot="card-footer"] [data-slot="button"]:hover {
+  color: #023E8A !important;
+}
+
+/* Forgot password link */
+.auth-page a[href*="forgot"] {
+  color: #0077B6 !important;
+}
+.auth-page a[href*="forgot"]:hover {
+  color: #023E8A !important;
 }
