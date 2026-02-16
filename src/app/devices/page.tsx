@@ -135,6 +135,24 @@ export default async function DevicesPage({
           )}
         </div>
       </div>
+
+      {/* Request a Device CTA */}
+      <div className="mt-12 rounded-xl border-2 border-dashed border-ocean-200 bg-ocean-50/30 p-6 sm:p-8 text-center">
+        <h3 className="font-heading text-lg font-semibold text-navy mb-2">
+          Don&apos;t see your device?
+        </h3>
+        <p className="text-sm text-navy-light mb-4 max-w-md mx-auto">
+          Request a device to be added to the directory. We&apos;ll benchmark it and add compatibility verdicts.
+        </p>
+        <a
+          href="https://github.com/codyrobertson/canitrunopenclaw/issues/new?template=device-request.md&title=Device+request%3A+"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg bg-ocean-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-ocean-700 transition-colors"
+        >
+          Request a Device
+        </a>
+      </div>
     </main>
   );
 }

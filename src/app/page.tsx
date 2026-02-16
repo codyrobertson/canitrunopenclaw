@@ -142,6 +142,10 @@ export default async function Home() {
             Find out if your hardware can handle the claw. Browse {allDevices.length}+ devices
             across {forks.length} OpenClaw forks — from $4 microcontrollers to cloud GPUs.
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-ocean-300/70">
+            OpenClaw is an open-source AI agent framework. Different forks target
+            different hardware — from 8MB microcontrollers to full GPUs.
+          </p>
           <div className="mt-10 flex justify-center">
             <Suspense fallback={<div className="w-full max-w-xl h-[52px] rounded-xl bg-white/20 animate-pulse" />}>
               <SearchBar placeholder="Search devices by name, CPU, or description..." />

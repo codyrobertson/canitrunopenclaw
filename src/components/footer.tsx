@@ -201,6 +201,14 @@ export async function Footer() {
                   RSS Feed
                 </Link>
               </li>
+              <li className="pt-1.5 mt-1.5 border-t border-ocean-100">
+                <Link
+                  href="/submit-fork"
+                  className="text-xs text-ocean-600 hover:text-ocean-800 transition-colors font-medium"
+                >
+                  Submit a Fork &rarr;
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

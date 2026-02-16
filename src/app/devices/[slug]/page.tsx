@@ -13,6 +13,7 @@ import { CommentSection } from "@/components/comment-section";
 import { UserVerdictSection } from "@/components/user-verdict-section";
 import { CategoryBadge } from "@/components/device-card";
 import { BenchmarkResults } from "@/components/benchmark-results";
+import { ShareButton } from "@/components/share-button";
 import { createMetadata } from "@/lib/seo/metadata";
 import { breadcrumbsForDevice } from "@/lib/seo/links";
 import { bestPath, canPath, guidePath } from "@/lib/seo/routes";
@@ -125,11 +126,14 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       <JsonLd data={jsonLd} />
-      <nav className="text-sm text-navy-light mb-6">
-        <Link href="/devices" className="hover:text-ocean-800">Devices</Link>
-        <span className="mx-2">/</span>
-        <span className="text-navy">{device.name}</span>
-      </nav>
+      <div className="flex items-center justify-between mb-6">
+        <nav className="text-sm text-navy-light">
+          <Link href="/devices" className="hover:text-ocean-800">Devices</Link>
+          <span className="mx-2">/</span>
+          <span className="text-navy">{device.name}</span>
+        </nav>
+        <ShareButton title={`${device.name} — Can it run OpenClaw?`} text={`Check out ${device.name} on Can it run OpenClaw?`} />
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main content - 2 cols */}

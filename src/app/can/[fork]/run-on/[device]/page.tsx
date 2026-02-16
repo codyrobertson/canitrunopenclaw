@@ -18,6 +18,7 @@ import {
   getSimilarDevicesForFork,
   getAffiliateLinks,
 } from "@/lib/queries";
+import { ShareButton } from "@/components/share-button";
 import {
   getDeviceBySlugCached,
   getForkBySlugCached,
@@ -181,16 +182,19 @@ export default async function ForkDeviceComboPage({
     <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
       <JsonLd data={jsonLd} />
 
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1 text-xs sm:text-sm text-navy-light mb-4 sm:mb-6 flex-wrap">
-        <Link href="/" className="hover:text-ocean-800">Home</Link>
-        <ChevronRight size={14} className="shrink-0" />
-        <Link href="/forks" className="hover:text-ocean-800">Forks</Link>
-        <ChevronRight size={14} className="shrink-0" />
-        <Link href={`/forks/${fork.slug}`} className="hover:text-ocean-800 truncate max-w-[100px] sm:max-w-none">{fork.name}</Link>
-        <ChevronRight size={14} className="shrink-0" />
-        <span className="text-navy truncate max-w-[100px] sm:max-w-none">{device.name}</span>
-      </nav>
+      {/* Breadcrumbs + Share */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <nav className="flex items-center gap-1 text-xs sm:text-sm text-navy-light flex-wrap min-w-0">
+          <Link href="/" className="hover:text-ocean-800">Home</Link>
+          <ChevronRight size={14} className="shrink-0" />
+          <Link href="/forks" className="hover:text-ocean-800">Forks</Link>
+          <ChevronRight size={14} className="shrink-0" />
+          <Link href={`/forks/${fork.slug}`} className="hover:text-ocean-800 truncate max-w-[100px] sm:max-w-none">{fork.name}</Link>
+          <ChevronRight size={14} className="shrink-0" />
+          <span className="text-navy truncate max-w-[100px] sm:max-w-none">{device.name}</span>
+        </nav>
+        <ShareButton title={`Can ${fork.name} run on ${device.name}?`} text={`${fork.name} on ${device.name} — Can it run OpenClaw?`} className="shrink-0 ml-2" />
+      </div>
 
       {/* Hero */}
       <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8 mb-6">

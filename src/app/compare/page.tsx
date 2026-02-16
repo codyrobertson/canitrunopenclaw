@@ -7,6 +7,7 @@ import { CompareSelector } from "@/components/compare-selector";
 import { JsonLd } from "@/components/json-ld";
 import Link from "next/link";
 import { ArrowRight, Cpu, MemoryStick, Zap, DollarSign, Monitor } from "lucide-react";
+import { ShareButton } from "@/components/share-button";
 
 export async function generateMetadata({
   searchParams,
@@ -103,7 +104,10 @@ export default async function ComparePage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
       <JsonLd data={jsonLd} />
-      <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy mb-1">Compare Devices</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-navy">Compare Devices</h1>
+        {selectedSlugs.length >= 2 && <ShareButton title="Device Comparison — Can it run OpenClaw?" />}
+      </div>
       <p className="text-sm text-navy-light mb-6">Select up to 3 devices to compare side-by-side.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
