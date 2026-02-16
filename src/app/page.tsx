@@ -9,17 +9,16 @@ import {
   Trophy,
   Waves,
 } from "lucide-react";
-import { cache } from "react";
-import { getDevicesRanked, getAllForks } from "@/lib/queries";
+import { getAllForksCached, getDevicesRankedAllCached } from "@/lib/queries-cached";
 import { DeviceCard } from "@/components/device-card";
 import { SearchBar } from "@/components/search-bar";
 import { createMetadata } from "@/lib/seo/metadata";
 
-const getCachedDevices = cache(() => getDevicesRanked());
-const getCachedForks = cache(() => getAllForks());
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [devices, forks] = await Promise.all([getCachedDevices(), getCachedForks()]);
+  const [devices, forks] = await Promise.all([getDevicesRankedAllCached(), getAllForksCached()]);
   const title = "Can it run OpenClaw? | Hardware Compatibility for AI Agents";
   const description = `Find out if your hardware can run OpenClaw and its forks. Browse ${devices.length}+ devices across ${forks.length} forks — from $4 microcontrollers to cloud GPUs. Community-tested compatibility verdicts.`;
 
@@ -34,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const [allDevices, forks] = await Promise.all([getCachedDevices(), getCachedForks()]);
+  const [allDevices, forks] = await Promise.all([getDevicesRankedAllCached(), getAllForksCached()]);
   const topDevices = allDevices.slice(0, 6);
 
   return (
@@ -231,7 +230,7 @@ export default async function Home() {
                   className="group rounded-xl border border-ocean-200 bg-white p-5 hover:border-ocean-400 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-mono font-medium text-ocean-600 bg-ocean-100 px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono font-medium text-ocean-800 bg-ocean-200 px-2 py-0.5 rounded">
                       {fork.language}
                     </span>
                     <span className="text-xs text-navy-light">
@@ -246,7 +245,7 @@ export default async function Home() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-1">
                     {features.slice(0, 3).map((f) => (
-                      <span key={f} className="text-[10px] text-ocean-600 bg-ocean-100/60 px-1.5 py-0.5 rounded">
+                      <span key={f} className="text-[10px] text-ocean-800 bg-ocean-200/60 px-1.5 py-0.5 rounded">
                         {f}
                       </span>
                     ))}

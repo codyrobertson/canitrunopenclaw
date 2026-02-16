@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ThumbsUp, ThumbsDown, ShieldCheck, Upload, MessageSquare } from "lucide-react";
 import { submitVerdict, voteVerdict } from "@/app/actions";
 import { VerdictBadge } from "@/components/verdict-badge";
+import { authClient } from "@/lib/auth-client";
 import type { UserVerdict, Fork } from "@/lib/queries";
 
 type VerdictOption = "RUNS_GREAT" | "RUNS_OK" | "BARELY_RUNS" | "WONT_RUN";
@@ -21,15 +23,48 @@ export function UserVerdictSection({
   deviceId,
   forks,
   verdicts,
-  userVotes,
-  isSignedIn,
 }: {
   deviceId: number;
   forks: Fork[];
   verdicts: UserVerdict[];
-  userVotes: Record<number, number>;
-  isSignedIn: boolean;
 }) {
+  const session = authClient.useSession();
+  const isSignedIn = Boolean(session.data?.user);
+  const [userVotes, setUserVotes] = useState<Record<number, number>>({});
+  const [votesLoaded, setVotesLoaded] = useState(false);
+
+  useEffect(() => {
+    setUserVotes({});
+    setVotesLoaded(false);
+  }, [deviceId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isSignedIn) {
+      setUserVotes({});
+      setVotesLoaded(false);
+      return;
+    }
+    if (votesLoaded) return;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/user-verdict-votes?deviceId=${deviceId}`, { method: "GET" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { votes?: Record<number, number> };
+        if (!cancelled && data.votes) setUserVotes(data.votes);
+      } catch {
+        // Ignore.
+      } finally {
+        if (!cancelled) setVotesLoaded(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId, isSignedIn, votesLoaded]);
+
   return (
     <div>
       <div className="mb-1">
@@ -39,7 +74,9 @@ export function UserVerdictSection({
         </p>
       </div>
 
-      {isSignedIn ? (
+      {session.isPending ? (
+        <div className="mb-6 h-24 rounded-lg bg-ocean-50 animate-pulse" />
+      ) : isSignedIn ? (
         <VerdictForm deviceId={deviceId} forks={forks} />
       ) : (
         <p className="mb-6 text-sm text-navy-light bg-ocean-100 rounded-lg p-3">
@@ -63,6 +100,7 @@ function VerdictForm({ deviceId, forks }: { deviceId: number; forks: Fork[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +121,7 @@ function VerdictForm({ deviceId, forks }: { deviceId: number; forks: Fork[] }) {
       setEvidenceUrl("");
       setVerdict("");
       setSelectedFork("");
+      router.refresh();
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit verdict");
@@ -240,6 +279,10 @@ function VerdictCard({
   const [displayCount, setDisplayCount] = useState(verdict.vote_count);
   const [voting, setVoting] = useState(false);
 
+  useEffect(() => {
+    setVoteState(currentVote);
+  }, [currentVote]);
+
   async function handleVote(vote: 1 | -1) {
     if (!isSignedIn || voting) return;
     setVoting(true);
@@ -270,7 +313,7 @@ function VerdictCard({
   const isVerified = displayCount >= 3;
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-ocean-100 bg-white p-4">
+    <div className="flex items-start gap-3 rounded-lg border border-ocean-200 bg-white p-4">
       {/* Vote buttons */}
       <div className="flex flex-col items-center gap-0.5 shrink-0">
         <button

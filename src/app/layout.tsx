@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import { AuthProvider } from "@/components/auth-provider";
 import { PostHogProvider } from "@/components/posthog-provider";
 import "./globals.css";
 
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
   },
   description:
     "Find out if your hardware can run OpenClaw and its forks. Browse 90+ devices from $4 microcontrollers to cloud GPUs. Community-tested compatibility verdicts.",
-  metadataBase: new URL("https://canitrunclaw.com"),
+  metadataBase: new URL("https://canitrunopenclaw.com"),
   alternates: {
     types: {
       "application/rss+xml": "/feed.xml",
@@ -43,11 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-sand text-navy antialiased">
         <PostHogProvider>
-          <AuthProvider>
-            <Nav />
-            {children}
-            <Footer />
-          </AuthProvider>
+          <Nav />
+          {children}
+          <Footer />
         </PostHogProvider>
       </body>
     </html>

@@ -48,7 +48,7 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
   expanded: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-ocean-100 overflow-hidden">
+    <div className="rounded-lg border border-ocean-200 overflow-hidden">
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-4 p-4 text-left hover:bg-ocean-50/50 transition-colors"
@@ -132,7 +132,7 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
           {details.length > 0 && (
             <div className="mt-3">
               <h4 className="text-xs font-semibold text-navy-light uppercase tracking-wider mb-2">All Metrics</h4>
-              <div className="rounded-lg border border-ocean-100 overflow-x-auto -mx-4 sm:mx-0">
+              <div className="rounded-lg border border-ocean-200 overflow-x-auto -mx-4 sm:mx-0">
                 <table className="w-full text-xs min-w-[400px]">
                   <thead>
                     <tr className="bg-ocean-50">

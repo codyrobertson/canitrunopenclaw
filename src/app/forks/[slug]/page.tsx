@@ -11,6 +11,9 @@ import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { CategoryBadge } from "@/components/device-card";
 
+export const dynamic = "force-static";
+export const revalidate = 86400;
+
 const getFork = cache((slug: string) => getForkBySlug(slug));
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -44,7 +47,7 @@ function formatStars(stars: number): string {
 
 const maturityConfig: Record<string, { label: string; color: string; desc: string }> = {
   stable: { label: "Stable", color: "bg-verdict-great/10 text-verdict-great border-verdict-great/20", desc: "Production-ready. Actively maintained." },
-  beta: { label: "Beta", color: "bg-ocean-100 text-ocean-700 border-ocean-200", desc: "Functional but may have breaking changes." },
+  beta: { label: "Beta", color: "bg-ocean-200 text-ocean-800 border-ocean-200", desc: "Functional but may have breaking changes." },
   alpha: { label: "Alpha", color: "bg-amber-50 text-amber-700 border-amber-200", desc: "Early development. Expect rough edges." },
   archived: { label: "Archived", color: "bg-gray-100 text-gray-500 border-gray-200", desc: "No longer maintained." },
 };
@@ -176,7 +179,7 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
           <h3 className="text-sm font-semibold text-navy mb-2">Features</h3>
           <div className="flex flex-wrap gap-2">
             {features.map((f) => (
-              <span key={f} className="text-sm text-ocean-700 bg-ocean-100 px-3 py-1 rounded-full">{f}</span>
+              <span key={f} className="text-sm text-ocean-800 bg-ocean-200 px-3 py-1 rounded-full">{f}</span>
             ))}
           </div>
         </div>

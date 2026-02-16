@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { cache } from "react";
-import { getAllForks } from "@/lib/queries";
+import { getAllForksCached } from "@/lib/queries-cached";
 import { createMetadata } from "@/lib/seo/metadata";
 import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { JsonLd } from "@/components/json-ld";
 
-const getCachedForks = cache(() => getAllForks());
+export const dynamic = "force-static";
+export const revalidate = 86400;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const forks = await getCachedForks();
+  const forks = await getAllForksCached();
   const title = `OpenClaw Forks - All ${forks.length} Forks Compared`;
   const description = `Compare all ${forks.length} OpenClaw forks. From lightweight microcontroller builds to full cloud deployments. Find the right fork for your hardware.`;
   return createMetadata({
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const maturityColors: Record<string, string> = {
   stable: "bg-verdict-great/10 text-verdict-great border-verdict-great/20",
-  beta: "bg-ocean-100 text-ocean-700 border-ocean-200",
+  beta: "bg-ocean-200 text-ocean-800 border-ocean-200",
   alpha: "bg-amber-50 text-amber-700 border-amber-200",
   archived: "bg-gray-100 text-gray-500 border-gray-200",
 };
@@ -30,12 +30,12 @@ const maturityColors: Record<string, string> = {
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-100 text-blue-700",
   Python: "bg-yellow-100 text-yellow-800",
-  Go: "bg-ocean-100 text-ocean-700",
+  Go: "bg-ocean-200 text-ocean-800",
   C: "bg-gray-100 text-gray-700",
   Rust: "bg-orange-100 text-orange-700",
   JavaScript: "bg-amber-100 text-amber-700",
   Swift: "bg-orange-100 text-orange-700",
-  Elixir: "bg-ocean-100 text-ocean-700",
+  Elixir: "bg-ocean-200 text-ocean-800",
   "C++": "bg-gray-100 text-gray-700",
 };
 
@@ -45,7 +45,7 @@ function formatStars(stars: number): string {
 }
 
 export default async function ForksPage() {
-  const forks = await getCachedForks();
+  const forks = await getAllForksCached();
 
   const jsonLd = buildSchemaGraph([
     buildBreadcrumbList([
@@ -136,7 +136,7 @@ export default async function ForksPage() {
               {/* Features */}
               <div className="flex flex-wrap gap-1.5">
                 {features.slice(0, 4).map((f) => (
-                  <span key={f} className="text-xs text-ocean-700 bg-ocean-100 px-2 py-0.5 rounded-full">{f}</span>
+                  <span key={f} className="text-xs text-ocean-800 bg-ocean-200 px-2 py-0.5 rounded-full">{f}</span>
                 ))}
                 {features.length > 4 && (
                   <span className="text-xs text-navy-light px-2 py-0.5">+{features.length - 4} more</span>

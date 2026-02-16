@@ -149,7 +149,7 @@ export function ProfileTabs({
                 className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
                   tab === t.id
                     ? "bg-white/20 text-white"
-                    : "bg-ocean-100 text-ocean-600"
+                    : "bg-ocean-200 text-ocean-700"
                 }`}
               >
                 {counts[t.id]}

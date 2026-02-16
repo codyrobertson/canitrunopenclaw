@@ -7,8 +7,8 @@ describe("sitemap static", () => {
     const items = await getSitemapChunkItems("0");
     const urls = items.map((x) => x.url);
 
-    expect(urls).toContain("https://canitrunclaw.com");
-    expect(urls).toContain("https://canitrunclaw.com/devices");
-    expect(urls).toContain("https://canitrunclaw.com/forks");
+    expect(urls).toContain("https://canitrunopenclaw.com");
+    expect(urls).toContain("https://canitrunopenclaw.com/devices");
+    expect(urls).toContain("https://canitrunopenclaw.com/forks");
   });
 });

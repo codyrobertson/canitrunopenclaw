@@ -56,7 +56,7 @@ export default async function Image({
               display: "flex",
             }}
           >
-            canitrunclaw.com
+            canitrunopenclaw.com
           </div>
         </div>
       ),
@@ -258,7 +258,7 @@ export default async function Image({
             {totalVerdicts} compatibility {totalVerdicts === 1 ? "report" : "reports"}
           </div>
           <div style={{ fontSize: 16, color: "rgba(255,255,255,0.4)", display: "flex" }}>
-            canitrunclaw.com
+            canitrunopenclaw.com
           </div>
         </div>
       </div>

@@ -1,4 +1,7 @@
-import { getAllDevices } from "@/lib/queries";
+import { getRecentDevices } from "@/lib/queries";
+
+export const dynamic = "force-static";
+export const revalidate = 3600; // 1h
 
 function escapeXml(str: string): string {
   return str
@@ -10,19 +13,15 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-  const devices = await getAllDevices();
+  const recent = await getRecentDevices(50);
 
-  // Sort by ID descending (newest first), take top 50
-  const recent = devices
-    .sort((a, b) => b.id - a.id)
-    .slice(0, 50);
-
-  const siteUrl = "https://canitrunclaw.com";
+  const siteUrl = "https://canitrunopenclaw.com";
   const now = new Date().toUTCString();
 
   const items = recent
     .map((device) => {
       const link = `${siteUrl}/devices/${device.slug}`;
+      const pubDate = device.updated_at ? new Date(device.updated_at).toUTCString() : now;
       const description = device.description
         ? escapeXml(device.description)
         : escapeXml(`${device.name} — ${device.category}, ${device.ram_gb}GB RAM${device.price_usd ? `, $${device.price_usd}` : ""}`);
@@ -33,7 +32,7 @@ export async function GET() {
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
       <category>${escapeXml(device.category)}</category>
-      <pubDate>${now}</pubDate>
+      <pubDate>${pubDate}</pubDate>
     </item>`;
     })
     .join("\n");
@@ -54,7 +53,7 @@ ${items}
   return new Response(rss, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=3600",
     },
   });
 }

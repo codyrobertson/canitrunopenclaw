@@ -486,7 +486,7 @@ export default async function SetupGuidePage({
       <div className="rounded-xl border border-ocean-200 bg-white p-8 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <CategoryBadge category={device.category} />
-          <span className="text-xs font-mono font-medium text-ocean-600 bg-ocean-100 px-2 py-0.5 rounded">
+          <span className="text-xs font-mono font-medium text-ocean-800 bg-ocean-200 px-2 py-0.5 rounded">
             {fork.language}
           </span>
           <VerdictBadge verdict={verdict.verdict} size="sm" />

@@ -4,18 +4,17 @@ import {
   Activity,
   Clock,
   Cpu,
-  HardDrive,
   MemoryStick,
   Trophy,
   Zap,
 } from "lucide-react";
 import {
-  getBenchmarkLeaderboard,
-  getBenchmarkForkSummaries,
-  getBenchmarkTotalRuns,
-  getCategories,
-  getAllForks,
-} from "@/lib/queries";
+  getAllForksCached,
+  getBenchmarkLeaderboardCached,
+  getBenchmarkForkSummariesCached,
+  getBenchmarkTotalRunsCached,
+  getCategoriesCached,
+} from "@/lib/queries-cached";
 import { createFilterAwareMetadata } from "@/lib/seo/listings";
 import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { JsonLd } from "@/components/json-ld";
@@ -26,8 +25,8 @@ export async function generateMetadata({
   searchParams: Promise<{ fork?: string; category?: string }>;
 }): Promise<Metadata> {
   const params = await searchParams;
-  const total = await getBenchmarkTotalRuns();
-  const summaries = await getBenchmarkForkSummaries();
+  const total = await getBenchmarkTotalRunsCached();
+  const summaries = await getBenchmarkForkSummariesCached();
 
   const title = "ClawBench Benchmarks | Hardware Performance Leaderboard";
   const description = `ClawBench benchmark results for ${summaries.length} OpenClaw forks across ${total} device tests. Compare cold start times, memory usage, and capability scores.`;
@@ -65,11 +64,11 @@ function scoreBg(score: number | null): string {
 }
 
 const langColors: Record<string, string> = {
-  Go: "bg-ocean-100 text-ocean-700",
+  Go: "bg-ocean-200 text-ocean-800",
   TypeScript: "bg-blue-100 text-blue-700",
   Python: "bg-yellow-100 text-yellow-700",
   Rust: "bg-orange-100 text-orange-700",
-  Elixir: "bg-ocean-100 text-ocean-700",
+  Elixir: "bg-ocean-200 text-ocean-800",
   "C++": "bg-gray-100 text-gray-700",
   C: "bg-gray-100 text-gray-700",
   Swift: "bg-orange-100 text-orange-700",
@@ -85,15 +84,15 @@ export default async function BenchmarksPage({
   const categoryFilter = params.category;
 
   const [summaries, totalRuns, leaderboard, categories, allForks] = await Promise.all([
-    getBenchmarkForkSummaries(),
-    getBenchmarkTotalRuns(),
-    getBenchmarkLeaderboard({
+    getBenchmarkForkSummariesCached(),
+    getBenchmarkTotalRunsCached(),
+    getBenchmarkLeaderboardCached({
       forkSlug: forkFilter,
       category: categoryFilter,
       limit: 100,
     }),
-    getCategories(),
-    getAllForks(),
+    getCategoriesCached(),
+    getAllForksCached(),
   ]);
 
   const jsonLd = buildSchemaGraph([

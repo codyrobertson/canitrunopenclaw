@@ -20,19 +20,19 @@ function formatPrice(price: number | null, type: string | null): string {
 }
 
 const categoryConfig: Record<string, { Icon: LucideIcon; color: string }> = {
-  SBC: { Icon: Cpu, color: "bg-ocean-100 text-ocean-700" },
-  Desktop: { Icon: Monitor, color: "bg-ocean-100 text-ocean-700" },
-  Laptop: { Icon: Laptop, color: "bg-ocean-100 text-ocean-700" },
-  Server: { Icon: Server, color: "bg-ocean-100 text-ocean-700" },
-  Cloud: { Icon: Cloud, color: "bg-ocean-100 text-ocean-700" },
+  SBC: { Icon: Cpu, color: "bg-ocean-200 text-ocean-800" },
+  Desktop: { Icon: Monitor, color: "bg-ocean-200 text-ocean-800" },
+  Laptop: { Icon: Laptop, color: "bg-ocean-200 text-ocean-800" },
+  Server: { Icon: Server, color: "bg-ocean-200 text-ocean-800" },
+  Cloud: { Icon: Cloud, color: "bg-ocean-200 text-ocean-800" },
   Microcontroller: { Icon: CircuitBoard, color: "bg-amber-100 text-amber-700" },
-  Handheld: { Icon: Gamepad2, color: "bg-ocean-100 text-ocean-700" },
-  Appliance: { Icon: Home, color: "bg-ocean-100 text-ocean-700" },
-  NAS: { Icon: HardDrive, color: "bg-ocean-100 text-ocean-700" },
-  Phone: { Icon: Smartphone, color: "bg-ocean-100 text-ocean-700" },
-  Tablet: { Icon: Tablet, color: "bg-ocean-100 text-ocean-700" },
-  "Mini PC": { Icon: Box, color: "bg-ocean-100 text-ocean-700" },
-  Router: { Icon: Router, color: "bg-ocean-100 text-ocean-700" },
+  Handheld: { Icon: Gamepad2, color: "bg-ocean-200 text-ocean-800" },
+  Appliance: { Icon: Home, color: "bg-ocean-200 text-ocean-800" },
+  NAS: { Icon: HardDrive, color: "bg-ocean-200 text-ocean-800" },
+  Phone: { Icon: Smartphone, color: "bg-ocean-200 text-ocean-800" },
+  Tablet: { Icon: Tablet, color: "bg-ocean-200 text-ocean-800" },
+  "Mini PC": { Icon: Box, color: "bg-ocean-200 text-ocean-800" },
+  Router: { Icon: Router, color: "bg-ocean-200 text-ocean-800" },
 };
 
 export function CategoryBadge({ category }: { category: string }) {
@@ -71,9 +71,9 @@ export function DeviceCard({ device }: { device: DeviceWithScore }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-navy-light">
-        <span className="rounded bg-ocean-100 px-2 py-0.5">{formatRam(device.ram_gb)} RAM</span>
-        {device.cpu && <span className="rounded bg-ocean-100 px-2 py-0.5 truncate max-w-[140px] sm:max-w-[200px]">{device.cpu}</span>}
-        {device.power_watts && <span className="rounded bg-ocean-100 px-2 py-0.5">{device.power_watts}W</span>}
+        <span className="rounded bg-ocean-200 px-2 py-0.5">{formatRam(device.ram_gb)} RAM</span>
+        {device.cpu && <span className="rounded bg-ocean-200 px-2 py-0.5 truncate max-w-[140px] sm:max-w-[200px]">{device.cpu}</span>}
+        {device.power_watts && <span className="rounded bg-ocean-200 px-2 py-0.5">{device.power_watts}W</span>}
       </div>
 
       <div className="mt-3 flex items-center justify-between">

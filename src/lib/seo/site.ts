@@ -1,1 +1,1 @@
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://canitrunclaw.com";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://canitrunopenclaw.com";

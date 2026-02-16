@@ -5,7 +5,7 @@ import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 
 describe("SEO schema builders", () => {
   test("toAbsoluteUrl prefixes SITE_URL", () => {
-    expect(toAbsoluteUrl("/devices")).toBe("https://canitrunclaw.com/devices");
+    expect(toAbsoluteUrl("/devices")).toBe("https://canitrunopenclaw.com/devices");
   });
 
   test("buildBreadcrumbList emits schema.org BreadcrumbList", () => {
@@ -17,8 +17,8 @@ describe("SEO schema builders", () => {
     expect(node["@type"]).toBe("BreadcrumbList");
     const itemListElement = (node as unknown as { itemListElement?: unknown }).itemListElement;
     expect(itemListElement).toEqual([
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://canitrunclaw.com/" },
-      { "@type": "ListItem", position: 2, name: "Devices", item: "https://canitrunclaw.com/devices" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://canitrunopenclaw.com/" },
+      { "@type": "ListItem", position: 2, name: "Devices", item: "https://canitrunopenclaw.com/devices" },
     ]);
   });
 

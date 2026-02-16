@@ -192,7 +192,7 @@ export default async function Image() {
             display: "flex",
           }}
         >
-          canitrunclaw.com
+          canitrunopenclaw.com
         </div>
       </div>
     ),

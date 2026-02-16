@@ -11,8 +11,9 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { count, desc, eq } from "drizzle-orm";
 import { getViewCount } from "@/lib/queries";
+import { withNextCache } from "@/lib/seo/cache";
 
-async function getAdminStats() {
+async function getAdminStatsUncached() {
   const [
     usersCount,
     verdictsCount,
@@ -59,6 +60,14 @@ async function getAdminStats() {
   };
 }
 
+async function getAdminStats() {
+  return withNextCache({
+    keyParts: ["admin", "overview", "stats"],
+    options: { revalidate: 60, tags: ["admin:overview"] },
+    fn: getAdminStatsUncached,
+  });
+}
+
 export default async function AdminOverviewPage() {
   const stats = await getAdminStats();
 
@@ -80,7 +89,7 @@ export default async function AdminOverviewPage() {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="rounded-xl bg-white ring-1 ring-ocean-100 shadow-sm p-4"
+            className="rounded-xl bg-white border border-ocean-200 shadow-sm p-4"
           >
             <div className="flex items-center gap-2 mb-2">
               <c.icon size={16} className={c.color} />
