@@ -79,7 +79,7 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
             )}
             {summary.peak_memory_mb !== null && (
               <span className="flex items-center gap-1">
-                <MemoryStick size={12} className="text-purple-500" />
+                <MemoryStick size={12} className="text-ocean-600" />
                 {summary.peak_memory_mb.toFixed(0)}MB
               </span>
             )}
@@ -101,9 +101,9 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
             <MetricCard icon={Timer} label="Cold Start" value={summary.cold_start_ms} unit="ms" color="text-ocean-600" />
             <MetricCard icon={Zap} label="Warm Response" value={summary.warm_response_ms} unit="ms" color="text-amber-500" />
-            <MetricCard icon={MemoryStick} label="Peak Memory" value={summary.peak_memory_mb} unit="MB" color="text-purple-500" />
-            <MetricCard icon={Cpu} label="CPU Average" value={summary.cpu_avg_percent} unit="%" color="text-blue-500" />
-            <MetricCard icon={Users} label="Max Concurrent" value={summary.max_concurrent} unit="" color="text-indigo-500" />
+            <MetricCard icon={MemoryStick} label="Peak Memory" value={summary.peak_memory_mb} unit="MB" color="text-ocean-600" />
+            <MetricCard icon={Cpu} label="CPU Average" value={summary.cpu_avg_percent} unit="%" color="text-ocean-700" />
+            <MetricCard icon={Users} label="Max Concurrent" value={summary.max_concurrent} unit="" color="text-ocean-800" />
           </div>
 
           {/* Capability breakdown */}
@@ -152,7 +152,7 @@ function BenchmarkRow({ summary, details, onToggle, expanded }: {
                           <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
                             d.category === "latency" ? "bg-blue-50 text-blue-600" :
                             d.category === "capability" ? "bg-green-50 text-green-600" :
-                            "bg-purple-50 text-purple-600"
+                            "bg-ocean-50 text-ocean-700"
                           }`}>
                             {d.category}
                           </span>

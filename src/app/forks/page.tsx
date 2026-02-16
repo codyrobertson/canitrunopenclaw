@@ -30,13 +30,13 @@ const maturityColors: Record<string, string> = {
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-100 text-blue-700",
   Python: "bg-yellow-100 text-yellow-800",
-  Go: "bg-cyan-100 text-cyan-700",
+  Go: "bg-ocean-100 text-ocean-700",
   C: "bg-gray-100 text-gray-700",
   Rust: "bg-orange-100 text-orange-700",
   JavaScript: "bg-amber-100 text-amber-700",
-  Swift: "bg-rose-100 text-rose-700",
-  Elixir: "bg-purple-100 text-purple-700",
-  "C++": "bg-indigo-100 text-indigo-700",
+  Swift: "bg-orange-100 text-orange-700",
+  Elixir: "bg-ocean-100 text-ocean-700",
+  "C++": "bg-gray-100 text-gray-700",
 };
 
 function formatStars(stars: number): string {

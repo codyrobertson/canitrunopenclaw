@@ -20,19 +20,19 @@ function formatPrice(price: number | null, type: string | null): string {
 }
 
 const categoryConfig: Record<string, { Icon: LucideIcon; color: string }> = {
-  SBC: { Icon: Cpu, color: "bg-emerald-100 text-emerald-700" },
-  Desktop: { Icon: Monitor, color: "bg-blue-100 text-blue-700" },
-  Laptop: { Icon: Laptop, color: "bg-purple-100 text-purple-700" },
-  Server: { Icon: Server, color: "bg-orange-100 text-orange-700" },
-  Cloud: { Icon: Cloud, color: "bg-sky-100 text-sky-700" },
+  SBC: { Icon: Cpu, color: "bg-ocean-100 text-ocean-700" },
+  Desktop: { Icon: Monitor, color: "bg-ocean-100 text-ocean-700" },
+  Laptop: { Icon: Laptop, color: "bg-ocean-100 text-ocean-700" },
+  Server: { Icon: Server, color: "bg-ocean-100 text-ocean-700" },
+  Cloud: { Icon: Cloud, color: "bg-ocean-100 text-ocean-700" },
   Microcontroller: { Icon: CircuitBoard, color: "bg-amber-100 text-amber-700" },
-  Handheld: { Icon: Gamepad2, color: "bg-pink-100 text-pink-700" },
-  Appliance: { Icon: Home, color: "bg-teal-100 text-teal-700" },
-  NAS: { Icon: HardDrive, color: "bg-indigo-100 text-indigo-700" },
-  Phone: { Icon: Smartphone, color: "bg-rose-100 text-rose-700" },
-  Tablet: { Icon: Tablet, color: "bg-fuchsia-100 text-fuchsia-700" },
-  "Mini PC": { Icon: Box, color: "bg-cyan-100 text-cyan-700" },
-  Router: { Icon: Router, color: "bg-lime-100 text-lime-700" },
+  Handheld: { Icon: Gamepad2, color: "bg-ocean-100 text-ocean-700" },
+  Appliance: { Icon: Home, color: "bg-ocean-100 text-ocean-700" },
+  NAS: { Icon: HardDrive, color: "bg-ocean-100 text-ocean-700" },
+  Phone: { Icon: Smartphone, color: "bg-ocean-100 text-ocean-700" },
+  Tablet: { Icon: Tablet, color: "bg-ocean-100 text-ocean-700" },
+  "Mini PC": { Icon: Box, color: "bg-ocean-100 text-ocean-700" },
+  Router: { Icon: Router, color: "bg-ocean-100 text-ocean-700" },
 };
 
 export function CategoryBadge({ category }: { category: string }) {
