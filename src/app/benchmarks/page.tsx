@@ -452,7 +452,7 @@ export default async function BenchmarksPage({
                 <a
                   href="https://github.com/codyrobertson/canitrunopenclaw/tree/main/clawbench"
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/20 transition-colors"
                 >
                   View ClawBench on GitHub &rarr;

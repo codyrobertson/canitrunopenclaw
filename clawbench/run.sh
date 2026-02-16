@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DB_PATH="$PROJECT_DIR/data/openclaw.db"
 API_ENDPOINT="${API_ENDPOINT:-}"
-API_KEY="${API_KEY:-}"
+API_KEY="${API_KEY:-${CLAWBENCH_API_KEY:-}}"
 
 # Fix Docker credential helper PATH (Docker Desktop on macOS)
 export PATH="/Applications/Docker.app/Contents/Resources/bin:${PATH}"
@@ -31,6 +31,7 @@ usage() {
   echo "Environment:"
   echo "  API_ENDPOINT  Where to POST results (optional)"
   echo "  API_KEY       API key for auth (optional)"
+  echo "  CLAWBENCH_API_KEY  Alias for API_KEY (optional)"
   exit 1
 }
 

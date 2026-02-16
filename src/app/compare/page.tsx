@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getDevicesRanked, getVerdictsByDevice } from "@/lib/queries";
+import { getDevicesRankedAllCached, getVerdictsByDeviceCached } from "@/lib/queries-cached";
 import { createFilterAwareMetadata } from "@/lib/seo/listings";
 import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { VerdictBadge } from "@/components/verdict-badge";
@@ -18,7 +18,7 @@ export async function generateMetadata({
   const hasFilters = Boolean(params.devices);
 
   if (hasFilters && selectedSlugs.length >= 2) {
-    const allDevices = await getDevicesRanked();
+    const allDevices = await getDevicesRankedAllCached();
     const selectedDevices = selectedSlugs
       .map((slug) => allDevices.find((d) => d.slug === slug))
       .filter(Boolean) as typeof allDevices;
@@ -78,7 +78,7 @@ export default async function ComparePage({
   searchParams: Promise<{ devices?: string }>;
 }) {
   const params = await searchParams;
-  const allDevices = await getDevicesRanked();
+  const allDevices = await getDevicesRankedAllCached();
   const selectedSlugs = params.devices?.split(",").filter(Boolean) ?? [];
   const selectedDevices = selectedSlugs
     .map((slug) => allDevices.find((d) => d.slug === slug))
@@ -87,7 +87,7 @@ export default async function ComparePage({
   const verdictsByDevice = await Promise.all(
     selectedDevices.map(async (d) => ({
       device: d,
-      verdicts: await getVerdictsByDevice(d.id),
+      verdicts: await getVerdictsByDeviceCached(d.id),
     }))
   );
 

@@ -12,6 +12,11 @@ ClawBench runs forks inside Docker containers with resource limits matching targ
 
 # Run with API submission
 API_ENDPOINT=http://localhost:3000/api/benchmarks ./clawbench/run.sh mac-mini-m1 openclaw
+
+# Run with API submission + auth
+API_ENDPOINT=https://your-site.vercel.app/api/benchmarks \
+CLAWBENCH_API_KEY=replace_with_key \
+./clawbench/run.sh mac-mini-m1 openclaw
 ```
 
 ## What It Measures
@@ -72,6 +77,7 @@ Results can be submitted to the web app API:
 # POST results
 curl -X POST http://localhost:3000/api/benchmarks \
   -H "Content-Type: application/json" \
+  -H "x-clawbench-key: $CLAWBENCH_API_KEY" \
   -d @clawbench/results/raspberry-pi-5_nanobot_20260214.json
 
 # GET latest results
@@ -83,7 +89,8 @@ curl "http://localhost:3000/api/benchmarks?device=raspberry-pi-5&fork=nanobot"
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `API_ENDPOINT` | URL to POST results | `http://host.docker.internal:3000/api/benchmarks` |
-| `API_KEY` | Authentication key | (none) |
+| `API_KEY` | Authentication key (`x-clawbench-key`) | (none) |
+| `CLAWBENCH_API_KEY` | Alias for `API_KEY` | (none) |
 | `FORK_REPO` | Git repo URL (required in container) | -- |
 | `FORK_LANG` | Language: python, typescript, go, rust, c | `python` |
 | `DEVICE_SLUG` | Device identifier | `unknown` |

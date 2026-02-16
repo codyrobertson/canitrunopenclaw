@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   getDeviceBySlug,
   getForkBySlug,
@@ -10,6 +11,14 @@ import {
   updateBenchmarkRunRawJson,
 } from "@/lib/queries";
 import { rateLimit } from "@/lib/rate-limit";
+
+function normalizeTagPart(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -56,9 +65,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = request.headers.get("x-clawbench-key");
-    if (process.env.CLAWBENCH_API_KEY && apiKey !== process.env.CLAWBENCH_API_KEY) {
-      return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
+    const configuredApiKey = process.env.CLAWBENCH_API_KEY;
+    const providedApiKey = request.headers.get("x-clawbench-key");
+    const requireApiKey =
+      process.env.NODE_ENV === "production" || Boolean(configuredApiKey);
+    if (requireApiKey && (!configuredApiKey || providedApiKey !== configuredApiKey)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await request.json()) as BenchmarkPayload;
@@ -130,6 +142,28 @@ export async function POST(request: NextRequest) {
 
       await updateBenchmarkRunRawJson(runId, JSON.stringify(body));
       await completeBenchmarkRun(runId, "completed");
+
+      // On-demand freshness: benchmarks impact device pages and pSEO pages that surface timings.
+      revalidatePath(`/devices/${device.slug}`);
+      revalidatePath(`/can/${fork.slug}/run-on/${device.slug}`);
+      revalidatePath(`/guides/${fork.slug}-on-${device.slug}`);
+      revalidatePath("/benchmarks");
+
+      revalidateTag(`verdict:${fork.slug}:${device.slug}`, "max");
+      revalidateTag(`verdicts:device:${device.id}`, "max");
+      revalidateTag(`best:${fork.slug}:${normalizeTagPart(device.category)}`, "max");
+      revalidateTag("devices:ranked", "max");
+      revalidateTag("benchmarks:summaries", "max");
+      revalidateTag("benchmarks:leaderboard", "max");
+      revalidateTag(`benchmarks:leaderboard:${normalizeTagPart(fork.slug)}`, "max");
+      revalidateTag(
+        `benchmarks:leaderboard:${normalizeTagPart(fork.slug)}:${normalizeTagPart(device.category)}`,
+        "max"
+      );
+      revalidateTag("benchmarks:total-runs", "max");
+      revalidateTag("sitemap:can", "max");
+      revalidateTag("sitemap:guides", "max");
+      revalidateTag("sitemap:best", "max");
 
       return NextResponse.json({ run_id: runId, status: "completed" }, { status: 201 });
     } catch (err) {

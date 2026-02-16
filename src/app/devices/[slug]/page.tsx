@@ -4,8 +4,8 @@ import Link from "next/link";
 import { cache } from "react";
 import { Snowflake, Flame } from "lucide-react";
 import { BuyButton, BuyButtonFallback } from "@/components/buy-button";
-import { getDeviceBySlug, getVerdictsByDevice, getCommentsByDevice, getDeviceRatings, getSimilarDevices, getVerdictCountsByDevice, getAffiliateLinks, getAllForks, getUserVerdictsByDevice, getUserVerdictVotes, getBenchmarksByDevice, getBenchmarksByDeviceAndFork, getUserByAuthId, upsertUser } from "@/lib/queries";
-import { auth } from "@/lib/auth";
+import { getDeviceBySlug, getVerdictsByDevice, getCommentsByDevice, getDeviceRatings, getSimilarDevices, getVerdictCountsByDevice, getAffiliateLinks, getUserVerdictsByDevice, getBenchmarksByDevice, getBenchmarksByDeviceAndFork } from "@/lib/queries";
+import { getAllForksCached } from "@/lib/queries-cached";
 import { JsonLd } from "@/components/json-ld";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { StarRating } from "@/components/star-rating";
@@ -18,15 +18,19 @@ import { breadcrumbsForDevice } from "@/lib/seo/links";
 import { bestPath, canPath, guidePath } from "@/lib/seo/routes";
 import { buildBreadcrumbList, buildProduct, buildSchemaGraph } from "@/lib/seo/schema";
 
+export const dynamic = "force-static";
+export const revalidate = 86400; // 24h ISR; avoids build-time param explosions at scale.
+
 // React cache deduplicates this across generateMetadata + page render
 const getDevice = cache((slug: string) => getDeviceBySlug(slug));
+const getDeviceVerdicts = cache((deviceId: number) => getVerdictsByDevice(deviceId));
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const device = await getDevice(slug);
   if (!device) return { title: "Device Not Found" };
 
-  const verdicts = await getVerdictsByDevice(device.id);
+  const verdicts = await getDeviceVerdicts(device.id);
 
   const title = `${device.name} - Can it run OpenClaw?`;
   const descParts = [device.description ?? device.name];
@@ -64,21 +68,17 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
     forks,
     userVerdicts,
     benchmarks,
-    sessionResult,
   ] = await Promise.all([
-    getVerdictsByDevice(device.id),
+    getDeviceVerdicts(device.id),
     getCommentsByDevice(device.id),
     getDeviceRatings(device.id),
     getSimilarDevices(device, 4),
     getVerdictCountsByDevice(device.id),
     getAffiliateLinks(device.id),
-    getAllForks(),
+    getAllForksCached(),
     getUserVerdictsByDevice(device.id),
     getBenchmarksByDevice(device.id),
-    auth.getSession(),
   ]);
-
-  const { data: session } = sessionResult;
 
   // Benchmark details — parallel fetch for all unique forks
   const forkSlugsInBenchmarks = [...new Set(benchmarks.map(b => b.fork_slug))];
@@ -98,22 +98,6 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
     if (!entries) continue;
     for (const [runId, details] of entries) {
       detailsByRunId[runId] = details;
-    }
-  }
-
-  // User data — only if signed in
-  let userVerdictVotes: Record<number, number> = {};
-  if (session?.user) {
-    const [, user] = await Promise.all([
-      upsertUser(
-        session.user.id,
-        session.user.name ?? session.user.email ?? "User",
-        session.user.image ?? null
-      ),
-      getUserByAuthId(session.user.id),
-    ]);
-    if (user) {
-      userVerdictVotes = await getUserVerdictVotes(user.id, device.id);
     }
   }
 
@@ -308,14 +292,12 @@ export default async function DeviceDetailPage({ params }: { params: Promise<{ s
               deviceId={device.id}
               forks={forks}
               verdicts={userVerdicts}
-              userVotes={userVerdictVotes}
-              isSignedIn={!!session?.user}
             />
           </div>
 
           {/* Comments */}
           <div className="rounded-xl border border-ocean-200 bg-white p-5 sm:p-8">
-            <CommentSection comments={comments} deviceId={device.id} isSignedIn={!!session?.user} />
+            <CommentSection comments={comments} deviceId={device.id} />
           </div>
         </div>
 

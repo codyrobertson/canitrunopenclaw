@@ -1,14 +1,8 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getUserByAuthId } from "@/lib/queries";
-import { LogIn } from "lucide-react";
 import { MobileMenu } from "./mobile-menu";
-import { NavUser } from "./nav-user";
+import { NavAuthSlot } from "./nav-auth-slot";
 
-export async function Nav() {
-  const { data: session } = await auth.getSession();
-  const appUser = session?.user ? await getUserByAuthId(session.user.id) : null;
-
+export function Nav() {
   return (
     <nav className="border-b border-ocean-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -46,21 +40,7 @@ export async function Nav() {
 
           {/* Right side — auth + mobile menu */}
           <div className="flex items-center gap-2 shrink-0">
-            {session?.user ? (
-              <NavUser
-                name={session.user.name ?? session.user.email ?? "User"}
-                image={session.user.image ?? null}
-                isAdmin={appUser?.is_admin ?? false}
-              />
-            ) : (
-              <Link
-                href="/auth/sign-in"
-                className="flex items-center gap-2 rounded-lg bg-ocean-800 px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-white hover:bg-ocean-700 transition-colors"
-              >
-                <LogIn size={16} />
-                <span>Sign in</span>
-              </Link>
-            )}
+            <NavAuthSlot />
             <MobileMenu />
           </div>
         </div>

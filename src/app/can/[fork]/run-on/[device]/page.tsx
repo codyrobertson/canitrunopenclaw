@@ -387,7 +387,7 @@ export default async function ForkDeviceComboPage({
                 <a
                   href={fork.github_url}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-between rounded-lg border border-ocean-200 p-3 text-sm font-medium text-navy hover:bg-ocean-50 transition-colors"
                 >
                   <span>{fork.name} on GitHub</span>

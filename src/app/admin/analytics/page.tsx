@@ -1,14 +1,23 @@
 import { BarChart3, TrendingUp, Eye, MousePointer, ExternalLink } from "lucide-react";
-import { getViewCount, getTopPages, getTopReferrers, getViewsByDay, getAffiliateClickStats } from "@/lib/queries";
+import {
+  getAffiliateClickStatsCached,
+  getTopPagesCached,
+  getTopReferrersCached,
+  getViewCountCached,
+  getViewsByDayCached,
+} from "@/lib/queries-cached";
 
 export default async function AnalyticsPage() {
-  const todayViews = await getViewCount(1);
-  const weekViews = await getViewCount(7);
-  const monthViews = await getViewCount(30);
-  const topPages = await getTopPages();
-  const topReferrers = await getTopReferrers();
-  const viewsByDay = await getViewsByDay();
-  const affiliateClicks = await getAffiliateClickStats();
+  const [todayViews, weekViews, monthViews, topPages, topReferrers, viewsByDay, affiliateClicks] =
+    await Promise.all([
+      getViewCountCached(1),
+      getViewCountCached(7),
+      getViewCountCached(30),
+      getTopPagesCached(),
+      getTopReferrersCached(),
+      getViewsByDayCached(),
+      getAffiliateClickStatsCached(),
+    ]);
 
   const maxDayViews = Math.max(...viewsByDay.map((d) => d.views), 1);
 

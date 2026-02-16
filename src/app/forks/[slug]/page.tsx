@@ -127,7 +127,7 @@ export default async function ForkDetailPage({ params }: { params: Promise<{ slu
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
             {fork.github_url && (
-              <a href={fork.github_url} target="_blank" rel="noopener" className="flex items-center gap-1 rounded-lg border border-ocean-200 px-4 py-2 text-sm font-medium text-navy hover:bg-ocean-50 transition-colors">
+              <a href={fork.github_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 rounded-lg border border-ocean-200 px-4 py-2 text-sm font-medium text-navy hover:bg-ocean-50 transition-colors">
                 GitHub <ExternalLink size={14} />
               </a>
             )}

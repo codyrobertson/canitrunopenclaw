@@ -79,16 +79,32 @@ npm run db:seed
 npm run dev
 ```
 
+### Tests (Vitest + Neon)
+
+Tests intentionally require a **separate Neon database** to avoid writing to production.
+
+```bash
+cp .env.test.example .env.test
+# Fill in DATABASE_URL_TEST (point this at a test/staging Neon DB)
+
+npm run db:push:test
+npm test
+```
+
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | Neon Postgres connection string |
+| `DATABASE_URL_TEST` | Neon Postgres connection string for tests (Vitest) |
 | `NEON_AUTH_BASE_URL` | Neon Auth endpoint |
 | `NEON_AUTH_COOKIE_SECRET` | Cookie encryption secret |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog project API key |
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL |
 | `GITHUB_TOKEN` | GitHub API token (for fork verification) |
+| `REVALIDATE_SECRET` | Secret for `POST /api/revalidate` (on-demand ISR/cache refresh) |
+| `VERIFY_FORKS_SECRET` | Optional shared secret for `GET/POST /api/verify-forks` automation (admin session also works) |
+| `CLAWBENCH_API_KEY` | API key for `POST /api/benchmarks` (required in production) |
 
 ## Project Structure
 

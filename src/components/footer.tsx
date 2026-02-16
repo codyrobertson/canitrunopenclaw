@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Github, Rss } from "lucide-react";
-import { getAllForks, getCategories, getCategoryForkCombinationChunk } from "@/lib/queries";
+import { getAllForksCached, getBestChunkCached, getCategoriesCached } from "@/lib/queries-cached";
 import { bestPath } from "@/lib/seo/routes";
 
 const popularDevices = [
@@ -19,9 +19,9 @@ const popularDevices = [
 ];
 
 export async function Footer() {
-  const forks = await getAllForks();
-  const categories = await getCategories();
-  const guideCombos = await getCategoryForkCombinationChunk(0, 24);
+  const forks = await getAllForksCached();
+  const categories = await getCategoriesCached();
+  const guideCombos = await getBestChunkCached(0, 24);
   const forkNameBySlug = new Map(forks.map((f) => [f.slug, f.name]));
 
   return (
@@ -51,7 +51,7 @@ export async function Footer() {
                 href="https://github.com/codyrobertson/canitrunopenclaw"
                 className="text-navy-light hover:text-ocean-800 transition-colors"
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
                 aria-label="GitHub"
               >
                 <Github size={18} />

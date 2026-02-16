@@ -721,7 +721,7 @@ export default async function SetupGuidePage({
                 <a
                   href={fork.github_url}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="block text-ocean-600 hover:text-ocean-800 transition-colors"
                 >
                   {fork.name} GitHub Repository
@@ -733,7 +733,7 @@ export default async function SetupGuidePage({
                     key={link.id}
                     href={`/go/${device.slug}?network=${link.network}`}
                     target="_blank"
-                    rel="noopener"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-ocean-600 hover:text-ocean-800 transition-colors"
                   >
                     <ShoppingCart size={14} />
@@ -745,7 +745,7 @@ export default async function SetupGuidePage({
                 <a
                   href={`/go/${device.slug}`}
                   target="_blank"
-                  rel="noopener"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 text-ocean-600 hover:text-ocean-800 transition-colors"
                 >
                   <ShoppingCart size={14} />

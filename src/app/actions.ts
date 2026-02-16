@@ -5,6 +5,40 @@ import { upsertUser, addComment, submitUserVerdict, voteOnVerdict, getUserByAuth
 import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/rate-limit";
 
+async function getDeviceSlugById(deviceId: number): Promise<string | null> {
+  const { db } = await import("@/lib/db");
+  const { devices } = await import("@/lib/schema");
+  const { eq } = await import("drizzle-orm");
+
+  const rows = await db
+    .select({ slug: devices.slug })
+    .from(devices)
+    .where(eq(devices.id, deviceId))
+    .limit(1);
+
+  return rows[0]?.slug ?? null;
+}
+
+async function revalidateDevice(deviceId: number): Promise<void> {
+  const slug = await getDeviceSlugById(deviceId);
+  if (slug) revalidatePath(`/devices/${slug}`);
+  revalidatePath("/devices");
+}
+
+async function getDeviceIdForUserVerdictId(userVerdictId: number): Promise<number | null> {
+  const { db } = await import("@/lib/db");
+  const { userVerdicts } = await import("@/lib/schema");
+  const { eq } = await import("drizzle-orm");
+
+  const rows = await db
+    .select({ device_id: userVerdicts.device_id })
+    .from(userVerdicts)
+    .where(eq(userVerdicts.id, userVerdictId))
+    .limit(1);
+
+  return rows[0]?.device_id ?? null;
+}
+
 async function getAuthenticatedUser() {
   const { data: session } = await auth.getSession();
   if (!session?.user) throw new Error("Must be signed in");
@@ -30,7 +64,7 @@ export async function rateDevice(deviceId: number, forkId: number, stars: number
   const user = await getAuthenticatedUser();
   const { upsertRating } = await import("@/lib/queries");
   await upsertRating(deviceId, forkId, user.id, stars);
-  revalidatePath(`/devices`);
+  await revalidateDevice(deviceId);
 }
 
 export async function postComment(deviceId: number, forkId: number | null, content: string) {
@@ -38,7 +72,7 @@ export async function postComment(deviceId: number, forkId: number | null, conte
   if (content.length > 2000) throw new Error("Comment too long");
   const user = await getAuthenticatedUser();
   await addComment(deviceId, forkId, user.id, content.trim());
-  revalidatePath(`/devices`);
+  await revalidateDevice(deviceId);
 }
 
 const VALID_VERDICTS = ["RUNS_GREAT", "RUNS_OK", "BARELY_RUNS", "WONT_RUN"] as const;
@@ -64,14 +98,19 @@ export async function submitVerdict(
     notes.trim() || null,
     evidenceUrl?.trim() || null
   );
-  revalidatePath(`/devices`);
+  await revalidateDevice(deviceId);
 }
 
 export async function voteVerdict(verdictId: number, vote: 1 | -1) {
   if (vote !== 1 && vote !== -1) throw new Error("Invalid vote");
   const user = await getAuthenticatedUser();
   await voteOnVerdict(user.id, verdictId, vote);
-  revalidatePath(`/devices`);
+  const deviceId = await getDeviceIdForUserVerdictId(verdictId);
+  if (deviceId) {
+    await revalidateDevice(deviceId);
+  } else {
+    revalidatePath("/devices");
+  }
 }
 
 export async function submitFork(name: string, githubUrl: string, description: string, language: string) {

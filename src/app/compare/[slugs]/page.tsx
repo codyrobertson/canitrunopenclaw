@@ -6,11 +6,8 @@ import {
   Trophy,
   Minus,
 } from "lucide-react";
-import {
-  getVerdictsByDevice,
-} from "@/lib/queries";
 import type { Device, Verdict } from "@/lib/queries";
-import { getDeviceBySlugCached } from "@/lib/queries-cached";
+import { getDeviceBySlugCached, getVerdictsByDeviceCached } from "@/lib/queries-cached";
 import { createMetadata } from "@/lib/seo/metadata";
 import { evaluateSeoGuardrails } from "@/lib/seo/guardrails";
 import { createNeonDuplicateDetector } from "@/lib/seo/neon-duplicate-detector";
@@ -142,8 +139,8 @@ export default async function ComparisonPage({
     redirect(`/compare/${canonicalSlugs}`);
   }
 
-  const verdicts1 = await getVerdictsByDevice(device1.id);
-  const verdicts2 = await getVerdictsByDevice(device2.id);
+  const verdicts1 = await getVerdictsByDeviceCached(device1.id);
+  const verdicts2 = await getVerdictsByDeviceCached(device2.id);
 
   const allForkNames = [
     ...new Set([...verdicts1.map((v) => v.fork_name), ...verdicts2.map((v) => v.fork_name)]),

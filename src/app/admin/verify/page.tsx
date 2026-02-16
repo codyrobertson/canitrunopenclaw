@@ -220,7 +220,7 @@ export default function AdminVerifyPage() {
                         <a
                           href={fork.github_url}
                           target="_blank"
-                          rel="noopener"
+                          rel="noopener noreferrer"
                           className="text-xs text-ocean-600 hover:text-ocean-800"
                         >
                           {fork.github_url.replace("https://github.com/", "")}

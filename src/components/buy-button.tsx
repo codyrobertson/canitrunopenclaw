@@ -30,7 +30,7 @@ export function BuyButton({
     <a
       href={href}
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       className={`inline-flex items-center gap-2 rounded-lg font-semibold transition-all active:scale-[0.98] ${VARIANT_STYLES[variant]} ${
         size === "sm" ? "px-3.5 py-2.5 text-xs" : "px-5 py-3 text-sm"
       }`}
@@ -59,7 +59,7 @@ export function BuyButtonFallback({
     <a
       href={href}
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       className="inline-flex items-center gap-2 rounded-lg bg-ocean-800 text-white font-semibold px-5 py-3 text-sm transition-all hover:bg-ocean-700 hover:shadow-md active:scale-[0.98] shadow-sm"
     >
       <ShoppingCart size={15} className="opacity-80" />

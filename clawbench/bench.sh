@@ -11,7 +11,7 @@ FORK_LANG="${FORK_LANG:-unknown}"
 DEVICE_SLUG="${DEVICE_SLUG:-unknown}"
 FORK_SLUG="${FORK_SLUG:-unknown}"
 API_ENDPOINT="${API_ENDPOINT:-}"
-API_KEY="${API_KEY:-}"
+API_KEY="${API_KEY:-${CLAWBENCH_API_KEY:-}}"
 MEMORY_LIMIT="${MEMORY_LIMIT:-0}"
 CPU_LIMIT="${CPU_LIMIT:-0}"
 DEVICE_NAME="${DEVICE_NAME:-unknown}"
@@ -476,10 +476,14 @@ JSONEOF
 # ============================================================
 if [ -n "$API_ENDPOINT" ]; then
   log "Submitting results to $API_ENDPOINT..."
+  # Match the app's benchmark ingestion contract so all metrics are persisted.
+  read -r -d '' API_PAYLOAD <<JSONEOF || true
+{"device_slug":"${DEVICE_SLUG}","fork_slug":"${FORK_SLUG}","results":{"latency":{"cold_start_ms":${COLD_START_MS},"clone_ms":${CLONE_MS},"install_ms":${INSTALL_MS},"startup_ms":${STARTUP_MS}},"capabilities":{"messaging":${CAP_MESSAGING},"browser_automation":${CAP_BROWSER},"code_execution":${CAP_CODE_EXEC},"persistent_memory":${CAP_MEMORY},"file_management":${CAP_FILES},"web_search":${CAP_SEARCH},"mcp":${CAP_MCP},"tool_use":${CAP_TOOLS}},"resources":{"peak_memory_mb":${PEAK_MEMORY_MB}}},"docker_config":{"memory_limit_mb":${MEMORY_LIMIT},"cpu_limit":${CPU_LIMIT}},"overall_score":${OVERALL_SCORE}}
+JSONEOF
   curl -sf -X POST "$API_ENDPOINT" \
     -H "Content-Type: application/json" \
     ${API_KEY:+-H "x-clawbench-key: $API_KEY"} \
-    -d @- <<< "{\"device_slug\":\"${DEVICE_SLUG}\",\"fork_slug\":\"${FORK_SLUG}\",\"overall_score\":${OVERALL_SCORE},\"results\":{\"cold_start_ms\":${COLD_START_MS},\"disk_mb\":${DISK_MB},\"source_lines\":${LINES},\"capabilities_passed\":${CAP_PASSED},\"startup_ok\":${STARTUP_OK}}}" >&2 || log "WARNING: Failed to submit results"
+    -d "$API_PAYLOAD" >&2 || log "WARNING: Failed to submit results"
 fi
 
 log "Done."

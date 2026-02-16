@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getDevicesRanked, getCategories, getAllForks } from "@/lib/queries";
+import {
+  getAllForksCached,
+  getCategoriesCached,
+  getDevicesRankedAllCached,
+  getDevicesRankedFilteredCached,
+} from "@/lib/queries-cached";
 import { createFilterAwareMetadata } from "@/lib/seo/listings";
 import { buildBreadcrumbList, buildSchemaGraph } from "@/lib/seo/schema";
 import { DeviceCard } from "@/components/device-card";
@@ -9,18 +14,29 @@ import { FilterToggle } from "@/components/filter-toggle";
 import { JsonLd } from "@/components/json-ld";
 import Link from "next/link";
 
+type DeviceFilters = {
+  q?: string;
+  category?: string;
+  fork?: string;
+  maxPrice?: string;
+};
+
+function normalizeDeviceFilters(params: DeviceFilters) {
+  return {
+    search: params.q?.trim() || undefined,
+    category: params.category?.trim() || undefined,
+    forkSlug: params.fork?.trim() || undefined,
+    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+  };
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; fork?: string; maxPrice?: string }>;
+  searchParams: Promise<DeviceFilters>;
 }): Promise<Metadata> {
   const params = await searchParams;
-  const devices = await getDevicesRanked({
-    search: params.q,
-    category: params.category,
-    forkSlug: params.fork,
-    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-  });
+  const hasFilters = Boolean(params.q || params.category || params.fork || params.maxPrice);
 
   const titleParts: string[] = [];
   if (params.category) titleParts.push(`${params.category} Devices`);
@@ -28,9 +44,10 @@ export async function generateMetadata({
   titleParts.push("for OpenClaw");
 
   const title = titleParts.join(" ");
-  const description = `Browse ${devices.length} ${params.category ? params.category.toLowerCase() + " " : ""}devices compatible with OpenClaw and its forks. Community-tested hardware compatibility verdicts.`;
+  const description = hasFilters
+    ? `Browse filtered ${params.category ? params.category.toLowerCase() + " " : ""}devices compatible with OpenClaw and its forks. Community-tested hardware compatibility verdicts.`
+    : `Browse ${(await getDevicesRankedAllCached()).length} devices compatible with OpenClaw and its forks. Community-tested hardware compatibility verdicts.`;
 
-  const hasFilters = Boolean(params.q || params.category || params.fork || params.maxPrice);
   return createFilterAwareMetadata({
     title,
     description,
@@ -42,18 +59,15 @@ export async function generateMetadata({
 export default async function DevicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; fork?: string; maxPrice?: string }>;
+  searchParams: Promise<DeviceFilters>;
 }) {
   const params = await searchParams;
+  const hasFilters = Boolean(params.q || params.category || params.fork || params.maxPrice);
+  const filters = normalizeDeviceFilters(params);
   const [devices, categories, forks] = await Promise.all([
-    getDevicesRanked({
-      search: params.q,
-      category: params.category,
-      forkSlug: params.fork,
-      maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-    }),
-    getCategories(),
-    getAllForks(),
+    hasFilters ? getDevicesRankedFilteredCached(filters) : getDevicesRankedAllCached(),
+    getCategoriesCached(),
+    getAllForksCached(),
   ]);
 
   const jsonLd = buildSchemaGraph([

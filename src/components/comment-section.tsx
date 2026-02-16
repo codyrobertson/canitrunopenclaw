@@ -3,20 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { postComment } from "@/app/actions";
+import { authClient } from "@/lib/auth-client";
 import type { Comment } from "@/lib/queries";
 
 export function CommentSection({
   comments,
   deviceId,
-  isSignedIn,
 }: {
   comments: Comment[];
   deviceId: number;
-  isSignedIn: boolean;
 }) {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
+  const session = authClient.useSession();
+  const isSignedIn = Boolean(session.data?.user);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,6 +28,7 @@ export function CommentSection({
     try {
       await postComment(deviceId, null, content);
       setContent("");
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to post comment");
     } finally {
@@ -35,7 +39,9 @@ export function CommentSection({
   return (
     <div>
       <h3 className="font-heading text-xl font-semibold text-navy mb-4">Comments ({comments.length})</h3>
-      {isSignedIn ? (
+      {session.isPending ? (
+        <div className="mb-6 h-24 rounded-xl bg-ocean-50 animate-pulse" />
+      ) : isSignedIn ? (
         <form onSubmit={handleSubmit} className="mb-6">
           <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Share your experience with this device..." rows={3} maxLength={2000} className="w-full rounded-xl border border-ocean-300 bg-white px-4 py-3 text-navy placeholder:text-ocean-400 focus:border-ocean-600 focus:outline-none focus:ring-2 focus:ring-ocean-200 transition-all resize-none" />
           <div className="mt-2 flex justify-end">

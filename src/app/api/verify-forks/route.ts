@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { auth } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   getAllForks,
   getForkBySlug,
   getAllForkVerifications,
   insertForkVerification,
+  getUserByAuthId,
 } from "@/lib/queries";
 import type { Fork } from "@/lib/queries";
 
@@ -24,6 +28,26 @@ function getGitHubHeaders(): Record<string, string> {
 function extractOwnerRepo(githubUrl: string): string | null {
   const match = githubUrl.match(/github\.com\/([^/]+\/[^/]+)/);
   return match ? match[1].replace(/\.git$/, "") : null;
+}
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+async function isAuthorized(request: NextRequest): Promise<boolean> {
+  const expectedSecret = process.env.VERIFY_FORKS_SECRET;
+  const providedSecret = request.headers.get("x-verify-forks-secret");
+  if (expectedSecret && providedSecret === expectedSecret) return true;
+
+  const { data: session } = await auth.getSession();
+  if (!session?.user) return false;
+
+  const user = await getUserByAuthId(session.user.id);
+  return Boolean(user?.is_admin);
 }
 
 // ---------- README parsing ----------
@@ -194,7 +218,17 @@ async function verifyOneFork(fork: Fork): Promise<{
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { fork_slug?: string };
+    if (!(await isAuthorized(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ip = getClientIp(request);
+    const rl = rateLimit(`verify-forks:post:${ip}`, 6, 60_000);
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { fork_slug?: string };
 
     let forksToVerify: Fork[];
 
@@ -232,7 +266,13 @@ export async function POST(request: NextRequest) {
         fork_name: fork.name,
         ...verification,
       });
+
+      // Fork pages surface verification badges; keep them fresh without waiting for daily ISR.
+      revalidatePath(`/forks/${fork.slug}`);
+      revalidateTag(`fork:${fork.slug}`, "max");
     }
+
+    revalidatePath("/forks");
 
     return NextResponse.json({ results }, { status: 201 });
   } catch (err) {
@@ -246,8 +286,18 @@ export async function POST(request: NextRequest) {
 
 // ---------- GET: Return latest results ----------
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (!(await isAuthorized(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ip = getClientIp(request);
+    const rl = rateLimit(`verify-forks:get:${ip}`, 60, 60_000);
+    if (!rl.success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const verifications = await getAllForkVerifications();
     const forks = await getAllForks();
 

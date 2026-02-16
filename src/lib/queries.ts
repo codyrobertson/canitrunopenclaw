@@ -72,6 +72,17 @@ export async function getDevicesRanked(filters?: {
   search?: string;
 }): Promise<DeviceWithScore[]> {
   const conditions: SQL[] = [];
+  let forkIdFilter: number | null = null;
+
+  if (filters?.forkSlug) {
+    const forkRows = await db
+      .select({ id: schema.forks.id })
+      .from(schema.forks)
+      .where(eq(schema.forks.slug, filters.forkSlug))
+      .limit(1);
+    if (!forkRows[0]) return [];
+    forkIdFilter = forkRows[0].id;
+  }
 
   if (filters?.category) {
     conditions.push(sql`d.category = ${filters.category}`);
@@ -83,13 +94,12 @@ export async function getDevicesRanked(filters?: {
     // Treat NULL prices as "Free" (=0) so maxPrice filters behave intuitively.
     conditions.push(sql`COALESCE(d.price_usd, 0) <= ${filters.maxPrice}`);
   }
-  if (filters?.forkSlug) {
+  if (forkIdFilter !== null) {
     conditions.push(sql`
       EXISTS (
         SELECT 1
         FROM compatibility_verdicts cvf
-        JOIN forks ff ON ff.id = cvf.fork_id
-        WHERE cvf.device_id = d.id AND ff.slug = ${filters.forkSlug}
+        WHERE cvf.device_id = d.id AND cvf.fork_id = ${forkIdFilter}
       )
     `);
   }
@@ -104,29 +114,35 @@ export async function getDevicesRanked(filters?: {
       : sql``;
 
   const result = await db.execute(sql`
+    WITH ratings AS (
+      SELECT
+        ur.device_id,
+        AVG(ur.stars)::float as avg_rating,
+        COUNT(DISTINCT ur.id)::int as rating_count
+      FROM user_ratings ur
+      GROUP BY ur.device_id
+    ),
+    verdicts AS (
+      SELECT
+        cv.device_id,
+        MAX(${verdictScoreSql(sql`cv.verdict`)})::float as max_verdict_score,
+        (ARRAY_AGG(cv.verdict ORDER BY ${verdictScoreSql(sql`cv.verdict`)} DESC))[1] as best_verdict
+      FROM compatibility_verdicts cv
+      GROUP BY cv.device_id
+    )
     SELECT
       d.*,
-      COALESCE(AVG(ur.stars), 0)::float as avg_rating,
-      COUNT(DISTINCT ur.id)::int as rating_count,
+      COALESCE(r.avg_rating, 0)::float as avg_rating,
+      COALESCE(r.rating_count, 0)::int as rating_count,
+      v.best_verdict,
       (
-        SELECT cv2.verdict
-        FROM compatibility_verdicts cv2
-        WHERE cv2.device_id = d.id
-        ORDER BY ${verdictScoreSql(sql`cv2.verdict`)} DESC
-        LIMIT 1
-      ) as best_verdict,
-      (
-        COALESCE(AVG(ur.stars), 0)::float * 0.6 +
-        COALESCE((
-          SELECT MAX(${verdictScoreSql(sql`cv3.verdict`)})
-          FROM compatibility_verdicts cv3
-          WHERE cv3.device_id = d.id
-        ), 0)::float * 0.4
+        COALESCE(r.avg_rating, 0)::float * 0.6 +
+        COALESCE(v.max_verdict_score, 0)::float * 0.4
       )::float as score
     FROM devices d
-    LEFT JOIN user_ratings ur ON ur.device_id = d.id
+    LEFT JOIN ratings r ON r.device_id = d.id
+    LEFT JOIN verdicts v ON v.device_id = d.id
     ${whereSql}
-    GROUP BY d.id
     ORDER BY score DESC, d.price_usd ASC NULLS LAST
   `);
 
@@ -144,6 +160,14 @@ export async function getDeviceBySlug(slug: string): Promise<Device | undefined>
 
 export async function getAllDevices(): Promise<Device[]> {
   return db.select().from(schema.devices).orderBy(asc(schema.devices.name));
+}
+
+export async function getRecentDevices(limit = 50): Promise<Device[]> {
+  return db
+    .select()
+    .from(schema.devices)
+    .orderBy(desc(schema.devices.id))
+    .limit(limit);
 }
 
 export async function getCategories(): Promise<string[]> {
@@ -471,7 +495,7 @@ export async function getComparisonPairsChunk(
     SELECT
       d1.slug as slug1,
       d2.slug as slug2,
-      GREATEST(d1.updated_at, d2.updated_at) as lastmod
+      GREATEST(d1.updated_at, d2.updated_at, MAX(GREATEST(cv1.updated_at, cv2.updated_at))) as lastmod
     FROM devices d1
     JOIN devices d2 ON d1.category = d2.category AND d1.id < d2.id
     JOIN compatibility_verdicts cv1 ON cv1.device_id = d1.id AND cv1.verdict <> 'WONT_RUN'
@@ -1272,13 +1296,21 @@ export async function getDeviceSlugsChunk(
   offset: number,
   limit: number
 ): Promise<{ slug: string; updated_at: string }[]> {
-  const rows = await db
-    .select({ slug: schema.devices.slug, updated_at: schema.devices.updated_at })
-    .from(schema.devices)
-    .orderBy(asc(schema.devices.slug))
-    .limit(limit)
-    .offset(offset);
-  return rows.map((r) => ({ slug: r.slug, updated_at: toIsoString(r.updated_at) }));
+  const result = await db.execute(sql`
+    SELECT
+      d.slug,
+      GREATEST(d.updated_at, COALESCE(MAX(cv.updated_at), d.updated_at)) as lastmod
+    FROM devices d
+    LEFT JOIN compatibility_verdicts cv ON cv.device_id = d.id
+    GROUP BY d.slug, d.updated_at
+    ORDER BY d.slug
+    LIMIT ${limit} OFFSET ${offset}
+  `);
+
+  return (result.rows as unknown as Array<{ slug: string; lastmod: unknown }>).map((r) => ({
+    slug: r.slug,
+    updated_at: toIsoString(r.lastmod),
+  }));
 }
 
 export async function getForkCount(): Promise<number> {
@@ -1290,13 +1322,26 @@ export async function getForkSlugsChunk(
   offset: number,
   limit: number
 ): Promise<{ slug: string; updated_at: string }[]> {
-  const rows = await db
-    .select({ slug: schema.forks.slug, updated_at: schema.forks.updated_at })
-    .from(schema.forks)
-    .orderBy(asc(schema.forks.slug))
-    .limit(limit)
-    .offset(offset);
-  return rows.map((r) => ({ slug: r.slug, updated_at: toIsoString(r.updated_at) }));
+  const result = await db.execute(sql`
+    SELECT
+      f.slug,
+      GREATEST(
+        f.updated_at,
+        COALESCE(MAX(cv.updated_at), f.updated_at),
+        COALESCE(MAX(fv.verified_at), f.updated_at)
+      ) as lastmod
+    FROM forks f
+    LEFT JOIN compatibility_verdicts cv ON cv.fork_id = f.id
+    LEFT JOIN fork_verifications fv ON fv.fork_id = f.id
+    GROUP BY f.slug, f.updated_at
+    ORDER BY f.slug
+    LIMIT ${limit} OFFSET ${offset}
+  `);
+
+  return (result.rows as unknown as Array<{ slug: string; lastmod: unknown }>).map((r) => ({
+    slug: r.slug,
+    updated_at: toIsoString(r.lastmod),
+  }));
 }
 
 export async function getNonWontRunVerdictCount(): Promise<number> {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 import { generateSitemapChunkIds } from "@/lib/seo/sitemaps";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,14 @@ type RevalidateBody = {
   tags?: string[];
   mode?: "sitemaps";
 };
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 function normalizePath(value: string): string {
   if (!value) return "/";
@@ -40,6 +49,12 @@ function getProvidedSecret(req: NextRequest, body: RevalidateBody): string | nul
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`revalidate:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = (await req.json().catch(() => ({}))) as RevalidateBody;
   const expected = process.env.REVALIDATE_SECRET;
 

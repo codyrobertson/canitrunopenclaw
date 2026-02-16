@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  turbopack: {
+    // Prevent Turbopack from guessing the monorepo root outside this project.
+    root: process.cwd(),
+  },
+  experimental: {
+    // Helps keep client bundles small when importing many icons/components.
+    optimizePackageImports: ["lucide-react"],
+  },
   async headers() {
     return [
       {

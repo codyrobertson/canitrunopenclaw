@@ -64,7 +64,12 @@ export const devices = pgTable("devices", {
   buy_link: text("buy_link"),
   description: text("description"),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_devices_category").on(table.category),
+  index("idx_devices_ram").on(table.ram_gb),
+  index("idx_devices_price").on(table.price_usd),
+  index("idx_devices_category_price").on(table.category, table.price_usd),
+]);
 
 export const forks = pgTable("forks", {
   id: serial("id").primaryKey(),
@@ -108,6 +113,10 @@ export const compatibilityVerdicts = pgTable(
     unique().on(table.device_id, table.fork_id),
     index("idx_cv_device_id").on(table.device_id),
     index("idx_cv_fork_id").on(table.fork_id),
+    index("idx_cv_fork_device").on(table.fork_id, table.device_id),
+    // Helps sitemap lastmod + per-device/fork freshness queries at scale.
+    index("idx_cv_device_updated_at").on(table.device_id, table.updated_at),
+    index("idx_cv_fork_updated_at").on(table.fork_id, table.updated_at),
   ]
 );
 
@@ -285,6 +294,8 @@ export const pageViews = pgTable(
   (table) => [
     index("idx_page_views_path").on(table.path),
     index("idx_page_views_date").on(table.viewed_at),
+    index("idx_page_views_date_path").on(table.viewed_at, table.path),
+    index("idx_page_views_date_referrer").on(table.viewed_at, table.referrer),
   ]
 );
 
